@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://<YOUR_CLOUD_RUN_URL>",
+      "url": "https://graphify-582534115027.asia-northeast1.run.app",
       "description": "Google Cloud Run (Production)"
     }
   ],
