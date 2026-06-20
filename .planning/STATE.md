@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 0 of 7 (데이터 인프라 & 동적 유니버스)
-Plan: 0 of 4 in current phase
-Status: Planning complete — ready to execute
-Last activity: 2026-06-20 — Phase 0 추가 (DATA-01~05), 동적 유니버스(volume_top_n) 설계 확정, KOSPI 상위 10종목/KOSPI only/수동추가 병행 방식 결정
+Plan: 2 of 4 in current phase
+Status: In progress — executing Phase 0 plans
+Last activity: 2026-06-20 — 00-01 완료: BacktestService volume null 버그 수정 (DATA-05), 5 tests GREEN (RuleEvaluatorVolumeTest 3 + BacktestServiceVolumeTest 2)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -42,6 +42,8 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [Phase 0, 00-02]: @DataJpaTest 슬라이스에서 Flyway 비활성화 — @AutoConfigureTestDatabase(replace=ANY) + @TestPropertySource 조합 사용 (application.properties 단독으로는 슬라이스 컨텍스트에서 무시됨)
+- [Phase 0, 00-02]: H2 testRuntimeOnly 추가 — PostgreSQL 전용 SQL 때문에 Flyway 마이그레이션 실행 안 함, ddl-auto=create-drop으로 스키마 생성
 - [Phase 0]: 유니버스 = KOSPI 거래량 상위 10종목 (자동) + additionalSymbols (수동 추가) 병행 방식 확정
 - [Phase 0]: 백테스트 유니버스는 날짜마다 동적으로 재선정 (look-ahead 없이 해당일 기준 상위 10종목)
 - [Phase 0]: KOSPI 200 범위에서 거래량 상위 10 선정 (전체 800종목 대비 현실적인 첫 단계)
@@ -64,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-20
-Stopped at: Roadmap created (ROADMAP.md, STATE.md written), REQUIREMENTS.md traceability section populated
+Stopped at: Completed 00-02-PLAN.md — in_kospi200 컬럼 + KOSPI 200 마스터 데이터 + CompanyEntityTest 4 tests GREEN
 Resume file: None
