@@ -52,7 +52,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: Yahoo Finance 5분봉 수집 + MarketBarIntraday 저장소 + BacktestRequest 인트라데이 파라미터
+- [x] 01-01: Yahoo Finance 5분봉 수집 + MarketBarIntraday 저장소 + BacktestRequest 인트라데이 파라미터
 - [ ] 01-02: BacktestService 5분봉 모드 전환 + Sharpe/Sortino/Profit Factor 서버 계산 + BacktestResult 확장
 - [ ] 01-03: recharts 설치 + PaperBacktestPage 차트 컴포넌트 (수익곡선 + 드로우다운 음영)
 - [ ] 01-04: PaperBacktestPage UI 완성 (시간대 입력 필드 + 고급 통계 섹션 + 레이아웃 정렬)
@@ -142,7 +142,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. 데이터 인프라 & 동적 유니버스 | 4/4 | Complete   | 2026-06-20 |
-| 1. 백테스트 시각화 | 0/2 | Not started | - |
+| 1. 백테스트 시각화 | 1/4 | In progress | - |
 | 2. 실시간 데이터 수집 & 스케줄러 인프라 | 0/2 | Not started | - |
 | 3. PAPER_LIVE 평가 엔진 | 0/2 | Not started | - |
 | 4. 대시보드·룰 생애주기·모니터·리포트 UI | 0/4 | Not started | - |

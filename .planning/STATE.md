@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 1 context gathered — 5분봉 인트라데이 백테스팅 & 시각화 결정 완료
-last_updated: "2026-06-20T11:36:20.378Z"
-last_activity: "2026-06-20 — 00-04 완료: volume_top_n 동적 유니버스 전체 스택 구현 (DATA-03, DATA-04), 8 tests GREEN"
+stopped_at: "Completed 01-01-PLAN.md — intraday data layer foundation (fetchIntradayForDateRange, findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs)"
+last_updated: "2026-06-20T14:40:48Z"
+last_activity: "2026-06-20 — 01-01 완료: YahooFinanceChartClient fetchIntradayForDateRange, MarketBarIntradayRepository findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs (CHART-01, CHART-02, CHART-03)"
 progress:
   total_phases: 7
   completed_phases: 1
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: 0 of 7 (데이터 인프라 & 동적 유니버스)
-Plan: 4 of 4 in current phase
-Status: Phase 0 complete — all 4 plans executed
-Last activity: 2026-06-20 — 00-04 완료: volume_top_n 동적 유니버스 전체 스택 구현 (DATA-03, DATA-04), 8 tests GREEN
+Phase: 1 of 7 (5분봉 인트라데이 백테스팅 & 시각화)
+Plan: 1 of 4 in current phase
+Status: Phase 1 in progress — 01-01 complete
+Last activity: 2026-06-20 — 01-01 완료: YahooFinanceChartClient fetchIntradayForDateRange, MarketBarIntradayRepository findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs
 
 Progress: [████░░░░░░] 40%
 
@@ -70,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 0]: 유니버스 = KOSPI 거래량 상위 10종목 (자동) + additionalSymbols (수동 추가) 병행 방식 확정
 - [Phase 0]: 백테스트 유니버스는 날짜마다 동적으로 재선정 (look-ahead 없이 해당일 기준 상위 10종목)
 - [Phase 0]: KOSPI 200 범위에서 거래량 상위 10 선정 (전체 800종목 대비 현실적인 첫 단계)
+- [Phase 1, 01-01]: BacktestRequest record extended with nullable String timeFrom/timeTo at end of parameter list — service applies defaults "09:00"/"12:00" when null
+- [Phase 1, 01-01]: fetchIntradayForDateRange uses period1/period2 epoch approach (KST zone) not range string — enables arbitrary date ranges up to 60 days
+- [Phase 1, 01-01]: findBySymbolAndRange hardcodes interval='5m' in JPQL — plan 01 scope is 5m only; other intervals served by findBySymbolAndIntervalOrderByTsAsc
 - [Roadmap]: recharts@2.15.0 for equity curve chart (SVG, React-friendly, 100-500 pts sufficient)
 - [Roadmap]: ShedLock mandatory before any LIVE rule activation (multi-instance safety)
 - [Roadmap]: AES-256-GCM via JPA AttributeConverter for Toss token storage (no plaintext in DB)

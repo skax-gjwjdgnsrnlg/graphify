@@ -17,9 +17,9 @@
 
 ### 백테스트 시각화 (CHART)
 
-- [ ] **CHART-01**: 사용자는 백테스트 결과 페이지에서 수익 곡선(equity curve) 라인 차트를 볼 수 있다
-- [ ] **CHART-02**: 사용자는 백테스트 결과에서 드로우다운 구간을 수익 곡선 위에 음영으로 확인할 수 있다
-- [ ] **CHART-03**: 사용자는 백테스트 결과에서 Sharpe Ratio, Sortino Ratio, Profit Factor를 확인할 수 있다 (서버사이드 계산)
+- [x] **CHART-01**: 사용자는 백테스트 결과 페이지에서 수익 곡선(equity curve) 라인 차트를 볼 수 있다
+- [x] **CHART-02**: 사용자는 백테스트 결과에서 드로우다운 구간을 수익 곡선 위에 음영으로 확인할 수 있다
+- [x] **CHART-03**: 사용자는 백테스트 결과에서 Sharpe Ratio, Sortino Ratio, Profit Factor를 확인할 수 있다 (서버사이드 계산)
 
 ### 실시간 데이터 수집 & 평가 엔진 (LIVE)
 
@@ -121,9 +121,9 @@
 | DATA-03 | Phase 0 | Complete |
 | DATA-04 | Phase 0 | Complete |
 | DATA-05 | Phase 0 | Complete |
-| CHART-01 | Phase 1 | Pending |
-| CHART-02 | Phase 1 | Pending |
-| CHART-03 | Phase 1 | Pending |
+| CHART-01 | Phase 1 | Complete |
+| CHART-02 | Phase 1 | Complete |
+| CHART-03 | Phase 1 | Complete |
 | LIVE-01 | Phase 2 | Pending |
 | LIVE-02 | Phase 2 | Pending |
 | LIVE-03 | Phase 2 | Pending |
