@@ -44,6 +44,8 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     Optional<Company> findByTicker(String ticker);
 
+    List<Company> findByInKospi200True();
+
     Optional<Company> findByExternalSourceAndExternalId(String externalSource, String externalId);
 
     Optional<Company> findFirstByNameIgnoreCase(String name);

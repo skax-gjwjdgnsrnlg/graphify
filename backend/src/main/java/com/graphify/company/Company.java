@@ -45,6 +45,9 @@ public class Company {
 
     private Boolean listed;
 
+    @Column(name = "in_kospi200", nullable = false)
+    private boolean inKospi200 = false;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
@@ -100,6 +103,10 @@ public class Company {
         return listed;
     }
 
+    public boolean isInKospi200() {
+        return inKospi200;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -142,6 +149,10 @@ public class Company {
 
     public void setListed(Boolean listed) {
         this.listed = listed;
+    }
+
+    public void setInKospi200(boolean inKospi200) {
+        this.inKospi200 = inKospi200;
     }
 
     public void setUpdatedAt(Instant updatedAt) {
