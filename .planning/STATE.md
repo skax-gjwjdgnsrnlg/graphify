@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 0 of 7 (데이터 인프라 & 동적 유니버스)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress — executing Phase 0 plans
-Last activity: 2026-06-20 — 00-01 완료: BacktestService volume null 버그 수정 (DATA-05), 5 tests GREEN (RuleEvaluatorVolumeTest 3 + BacktestServiceVolumeTest 2)
+Last activity: 2026-06-20 — 00-03 완료: ingestDailyForKospi200() 추가 (DATA-02), 5 Mockito tests GREEN
 
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
@@ -46,6 +46,8 @@ Recent decisions affecting current work:
 - [Phase 0, 00-01]: 평가 루프에서 getOrDefault(symbol, null) 패턴 사용 — volumes 없는 봉은 null 전달해 RuleEvaluator NaN fallback 유지
 - [Phase 0, 00-02]: @DataJpaTest 슬라이스에서 Flyway 비활성화 — @AutoConfigureTestDatabase(replace=ANY) + @TestPropertySource 조합 사용 (application.properties 단독으로는 슬라이스 컨텍스트에서 무시됨)
 - [Phase 0, 00-02]: H2 testRuntimeOnly 추가 — PostgreSQL 전용 SQL 때문에 Flyway 마이그레이션 실행 안 함, ddl-auto=create-drop으로 스키마 생성
+- [Phase 0, 00-03]: @Scheduled 어노테이션 미추가 — Phase 2에서 스케줄러 추가 예정, 현재는 InternalMarketController HTTP 엔드포인트로 수동 트리거
+- [Phase 0, 00-03]: Mockito Spy + doReturn 패턴 — ingestDaily()가 외부 Yahoo API 호출하므로 count 집계 로직 검증 시 Spy로 stub
 - [Phase 0]: 유니버스 = KOSPI 거래량 상위 10종목 (자동) + additionalSymbols (수동 추가) 병행 방식 확정
 - [Phase 0]: 백테스트 유니버스는 날짜마다 동적으로 재선정 (look-ahead 없이 해당일 기준 상위 10종목)
 - [Phase 0]: KOSPI 200 범위에서 거래량 상위 10 선정 (전체 800종목 대비 현실적인 첫 단계)
@@ -67,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-20
-Stopped at: Completed 00-01-PLAN.md — BacktestService volume null 버그 수정 (DATA-05), 5 tests GREEN
+Stopped at: Completed 00-03-PLAN.md — ingestDailyForKospi200() 추가 (DATA-02), 5 Mockito tests GREEN
 Resume file: None
