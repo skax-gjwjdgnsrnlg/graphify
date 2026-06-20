@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 01-04-PLAN.md — PaperBacktestPage rewritten with EquityCurveChart, 고급통계 section, timeFrom/timeTo inputs, datetime fix. Phase 1 complete.
-last_updated: "2026-06-20T15:31:59.554Z"
+stopped_at: Phase 2 context gathered
+last_updated: "2026-06-20T16:25:46.167Z"
 last_activity: "2026-06-21 — 01-04 완료: PaperBacktestPage에 EquityCurveChart 연결, Sharpe/Sortino/PF 카드 추가, 시간 입력 필드 추가, t.datetime 수정"
 progress:
   total_phases: 7
@@ -100,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T15:26:00Z
-Stopped at: Completed 01-04-PLAN.md — PaperBacktestPage rewritten with EquityCurveChart, 고급통계 section, timeFrom/timeTo inputs, datetime fix. Phase 1 complete.
-Resume file: .planning/phases/01-backtest-visualization/01-04-SUMMARY.md
+Last session: 2026-06-20T16:25:46.163Z
+Stopped at: Phase 2 context gathered
+Resume file: .planning/phases/02-realtime-data-scheduler/02-CONTEXT.md
