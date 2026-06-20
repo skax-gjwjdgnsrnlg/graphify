@@ -30,7 +30,7 @@
   3. `RuleDefinition.Universe`에 `{"type":"volume_top_n","market":"KOSPI","topN":10}` 형식이 추가되며, BacktestService가 각 날짜별 거래량 상위 10종목을 동적으로 선정해 룰을 평가한다
   4. BacktestService가 `closes`와 함께 실제 `volumes` 배열을 RuleEvaluator에 전달하여 VOLUME 지표가 올바르게 계산된다
   5. `additionalSymbols`에 명시된 종목은 자동 선정 종목과 합산되어 유니버스를 구성한다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 00-01: BacktestService volume null 버그 수정 (closes 추출과 동일하게 volumes 배열 추출 후 전달)
@@ -47,7 +47,7 @@ Plans:
   2. 드로우다운 구간이 수익 곡선 위에 붉은 음영으로 오버레이되어 시각적으로 구분된다
   3. Sharpe Ratio, Sortino Ratio, Profit Factor 수치가 백테스트 결과 페이지에 표시된다 (서버사이드 계산)
   4. 차트는 100-500개 포인트 데이터에서 렌더링 지연 없이 동작한다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 01-01: recharts 설치 + BacktestService에 Sharpe/Sortino/Profit Factor 계산 추가
@@ -62,7 +62,7 @@ Plans:
   2. KRX 공휴일이 등록된 경우 해당 날짜에는 수집 및 평가가 실행되지 않는다
   3. 다중 인스턴스 환경에서 동일 틱에 분산 잠금이 적용되어 수집이 1회만 실행된다
   4. 최신 봉이 10분 이상 오래된 경우 WARNING 로그가 기록되고 이후 평가가 건너뛰어진다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 02-01: ShedLock 의존성 추가 + KrxMarketCalendar 구현 + market_holidays 마이그레이션
@@ -77,7 +77,7 @@ Plans:
   2. 매 평가 주기 종료 시 paper_equity_snapshots 테이블에 가상 계좌 평가금액이 저장된다
   3. 신호 로그에 평가 시점의 RSI, SMA 등 주요 지표값이 함께 기록된다
   4. DB 쓰기 관통(write-through) 방식으로 틱마다 상태를 로드하고 플러시하여 인스턴스 재시작 후에도 포지션이 유지된다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 03-01: OrderExecutorPort 인터페이스 + PaperExecutor 구현 + paper_signal_log 마이그레이션
@@ -93,7 +93,7 @@ Plans:
   3. 모니터 페이지에서 신호 평가 로그(시각·종목·신호·결과), 스케줄러 마지막 실행 시각, 장중/장외 상태, 오늘 체결 피드가 표시된다
   4. 성과 리포트 페이지에서 모의 실행 기간의 수익 곡선·수익률·MDD·승률·거래 횟수·Sharpe/Sortino Ratio가 표시된다
   5. LIVE 룰은 편집 버튼이 비활성화되고, 수정 시 DRAFT 복사본 생성 안내가 표시된다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 04-01: PaperDashboardPage 완성 (잔고·포지션·손익 API + UI)
@@ -109,7 +109,7 @@ Plans:
   1. 설정 페이지에서 client_id/client_secret을 등록하면 AES-256-GCM으로 암호화되어 toss_credentials 테이블에 저장된다 (DB에 평문 저장 없음)
   2. 시스템이 토스증권 OAuth 액세스 토큰을 자동 발급하고, 만료 10분 전에 선제적으로 갱신한다
   3. 대시보드에서 연동된 토스증권 실계좌 잔고를 조회할 수 있다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 05-01: toss_credentials 마이그레이션 + AesGcmAttributeConverter + TossCredentialService
@@ -124,7 +124,7 @@ Plans:
   2. LIVE 룰 평가에 토스증권 API 실시간 시세가 사용된다
   3. 토스증권 API 연속 5회 실패 시 서킷 브레이커가 열리고 LIVE 룰 평가가 중단되며 경고 로그가 기록된다
   4. PAPER_LIVE 룰을 LIVE로 승격하려면 토스증권 인증 완료 + 최소 5거래일 운영 조건을 충족해야 한다
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
 - [ ] 06-01: TossOrderExecutor 구현 + live_accounts/live_trades 마이그레이션 + 서킷 브레이커
