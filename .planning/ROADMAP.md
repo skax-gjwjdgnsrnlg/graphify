@@ -11,7 +11,7 @@
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 0: 데이터 인프라 & 동적 유니버스** - KOSPI 200 일봉 OHLCV 전체 수집, volume_top_n 동적 유니버스 타입 추가, BacktestService volume 버그 수정을 완료해 이후 모든 phase의 데이터 기반을 확보한다 (completed 2026-06-20)
-- [ ] **Phase 1: 백테스트 시각화** - 기존 백테스트 엔진 결과를 수익 곡선 차트 + 드로우다운 음영 + 고급 지표로 시각화한다
+- [ ] **Phase 1: 5분봉 인트라데이 백테스팅 & 시각화** - 일봉 백테스팅을 5분봉 인트라데이 모드로 전환하고(09:00–12:00 KST, Yahoo Finance 60일), 결과를 수익 곡선 차트 + 드로우다운 음영 + 고급 지표(Sharpe/Sortino/Profit Factor)로 시각화한다
 - [ ] **Phase 2: 실시간 데이터 수집 & 스케줄러 인프라** - KRX 장 중 5분 주기 분봉 수집, 공휴일 가드, ShedLock 분산 잠금을 구축한다
 - [ ] **Phase 3: PAPER_LIVE 평가 엔진** - 스케줄러 기반 실시간 룰 평가 + 가상 체결 + 스냅샷 저장 엔진을 완성한다
 - [ ] **Phase 4: 대시보드·룰 생애주기·모니터·리포트 UI** - 모의 대시보드, 룰 상태 전환 UI, 실시간 모니터, 성과 리포트 페이지를 완성한다
@@ -38,20 +38,24 @@ Plans:
 - [ ] 00-03: MarketDataIngestionService에 `ingestDailyForKospi200()` 추가 — `in_kospi200=true` 종목 전체 OHLCV 수집, @Scheduled 매 거래일 장 마감 후 실행
 - [ ] 00-04: `RuleDefinition.Universe`에 `volume_top_n` 타입 추가 + BacktestService/LiveEvaluationService에 날짜별 동적 유니버스 선정 로직 구현 (market_bars에서 KOSPI 거래량 상위 N 쿼리)
 
-### Phase 1: 백테스트 시각화
-**Goal**: 백테스트 결과 페이지에서 수익 곡선 차트·드로우다운 음영·고급 통계 지표를 확인할 수 있어 전략의 리스크·수익성을 시각적으로 평가할 수 있다
-**Depends on**: Nothing (first phase)
+### Phase 1: 5분봉 인트라데이 백테스팅 & 시각화
+**Goal**: 일봉 백테스팅을 5분봉 인트라데이 모드로 전환한다. 사용자가 날짜 범위를 선택하면 해당 기간 거래량 상위 종목(volume_top_n)을 자동 선정하고 각 거래일 09:00–12:00 KST 구간 5분봉으로 백테스팅을 실행한다. 결과는 datetime 축 수익 곡선 + 드로우다운 음영 + Sharpe/Sortino/Profit Factor로 시각화한다.
+**Depends on**: Phase 0
 **Requirements**: CHART-01, CHART-02, CHART-03
+**Constraints**: Yahoo Finance 5분봉 제공 기간 최대 60일
 **Success Criteria** (what must be TRUE):
-  1. 사용자가 백테스트를 실행하면 수익 곡선(equity curve) 라인 차트가 날짜 x축, 평가금액 y축으로 렌더링된다
-  2. 드로우다운 구간이 수익 곡선 위에 붉은 음영으로 오버레이되어 시각적으로 구분된다
-  3. Sharpe Ratio, Sortino Ratio, Profit Factor 수치가 백테스트 결과 페이지에 표시된다 (서버사이드 계산)
-  4. 차트는 100-500개 포인트 데이터에서 렌더링 지연 없이 동작한다
+  1. BacktestRequest에 interval(기본 5m), timeFrom(기본 09:00), timeTo(기본 12:00) 파라미터가 추가되고, BacktestService가 해당 구간 5분봉으로 평가를 실행한다
+  2. 유니버스 선정은 일봉 거래량(volume_top_n) 기준을 유지하고, 선정된 종목의 5분봉 데이터를 Yahoo Finance에서 수집한다
+  3. 수익 곡선이 datetime x축(각 세션 09:00–12:00 연속 연결)으로 렌더링되며, 드로우다운 구간에 연한 붉은 음영이 오버레이된다
+  4. Sharpe Ratio, Sortino Ratio, Profit Factor가 서버에서 계산되어 차트 아래 별도 섹션에 표시된다
+  5. hover 툴팁에 datetime + 평가액 + 누적 수익률이 표시된다
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: recharts 설치 + BacktestService에 Sharpe/Sortino/Profit Factor 계산 추가
-- [ ] 01-02: PaperBacktestPage에 수익 곡선 차트 + 드로우다운 음영 컴포넌트 구현
+- [ ] 01-01: Yahoo Finance 5분봉 수집 + MarketBarIntraday 저장소 + BacktestRequest 인트라데이 파라미터
+- [ ] 01-02: BacktestService 5분봉 모드 전환 + Sharpe/Sortino/Profit Factor 서버 계산 + BacktestResult 확장
+- [ ] 01-03: recharts 설치 + PaperBacktestPage 차트 컴포넌트 (수익곡선 + 드로우다운 음영)
+- [ ] 01-04: PaperBacktestPage UI 완성 (시간대 입력 필드 + 고급 통계 섹션 + 레이아웃 정렬)
 
 ### Phase 2: 실시간 데이터 수집 & 스케줄러 인프라
 **Goal**: KRX 장 중(09:00-15:30 KST, 거래일)에만 5분마다 활성 종목 분봉을 수집하고, 다중 인스턴스 환경에서 이중 수집이 발생하지 않도록 ShedLock 분산 잠금을 적용한다
