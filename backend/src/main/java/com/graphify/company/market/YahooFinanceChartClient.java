@@ -143,6 +143,169 @@ public class YahooFinanceChartClient {
         return fetchDailyChart(yahooSymbol).flatMap(this::enrichWithIntradayQuote);
     }
 
+    /** 일봉 OHLCV 전체 적재용. interval=1d, range=2y. */
+    public List<OhlcvBar> fetchDailyOhlcv(String yahooSymbol) {
+        if (!properties.isYahooEnabled()) {
+            return List.of();
+        }
+        try {
+            JsonNode root = yahooRestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v8/finance/chart/{symbol}")
+                            .queryParam("interval", "1d")
+                            .queryParam("range", "2y")
+                            .queryParam("includePrePost", "false")
+                            .build(yahooSymbol))
+                    .retrieve()
+                    .body(JsonNode.class);
+            return parseOhlcv(root, true).stream()
+                    .map(r -> new OhlcvBar(
+                            Instant.ofEpochSecond(r.epoch).atZone(r.zone).toLocalDate(),
+                            r.open, r.high, r.low, r.close, r.volume))
+                    .toList();
+        } catch (RestClientException ex) {
+            log.warn("Yahoo daily OHLCV fetch failed symbol={}: {}", yahooSymbol, ex.getMessage());
+            return List.of();
+        }
+    }
+
+    /** 분봉 OHLCV 적재용. 예: interval=5m, range=1d. */
+    public List<IntradayBar> fetchIntraday(String yahooSymbol, String interval, String range) {
+        if (!properties.isYahooEnabled()) {
+            return List.of();
+        }
+        try {
+            JsonNode root = yahooRestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v8/finance/chart/{symbol}")
+                            .queryParam("interval", interval)
+                            .queryParam("range", range)
+                            .queryParam("includePrePost", "false")
+                            .build(yahooSymbol))
+                    .retrieve()
+                    .body(JsonNode.class);
+            return parseOhlcv(root, false).stream()
+                    .map(r -> new IntradayBar(
+                            Instant.ofEpochSecond(r.epoch), r.open, r.high, r.low, r.close, r.volume))
+                    .toList();
+        } catch (RestClientException ex) {
+            log.warn("Yahoo intraday fetch failed symbol={} interval={}: {}", yahooSymbol, interval, ex.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * 날짜 범위 지정 5분봉 수집. period1/period2 epoch 방식으로 Yahoo에 요청.
+     * from ~ to는 최대 60일 이내여야 한다.
+     */
+    public List<IntradayBar> fetchIntradayForDateRange(
+            String yahooSymbol, LocalDate from, LocalDate to) {
+        if (!properties.isYahooEnabled()) {
+            return List.of();
+        }
+        ZoneId kst = ZoneId.of("Asia/Seoul");
+        long period1 = from.atStartOfDay(kst).toEpochSecond();
+        long period2 = to.atTime(23, 59, 59).atZone(kst).toEpochSecond();
+        try {
+            JsonNode root = yahooRestClient.get()
+                    .uri(u -> u.path("/v8/finance/chart/{symbol}")
+                            .queryParam("period1", period1)
+                            .queryParam("period2", period2)
+                            .queryParam("interval", "5m")
+                            .queryParam("includePrePost", "false")
+                            .build(yahooSymbol))
+                    .retrieve()
+                    .body(JsonNode.class);
+            return parseOhlcv(root, false).stream()
+                    .map(r -> new IntradayBar(
+                            Instant.ofEpochSecond(r.epoch), r.open, r.high, r.low, r.close, r.volume))
+                    .toList();
+        } catch (RestClientException ex) {
+            log.warn("Yahoo intraday range fetch failed symbol={}: {}", yahooSymbol, ex.getMessage());
+            return List.of();
+        }
+    }
+
+    private record RawBar(long epoch, ZoneId zone, Double open, Double high, Double low, double close, Long volume) {
+    }
+
+    private static List<RawBar> parseOhlcv(JsonNode root, boolean dailyDedup) {
+        if (root == null) {
+            return List.of();
+        }
+        JsonNode result = root.path("chart").path("result");
+        if (!result.isArray() || result.isEmpty()) {
+            return List.of();
+        }
+        JsonNode first = result.get(0);
+        ZoneId zone = resolveExchangeZone(first.path("meta"));
+        JsonNode timestamps = first.path("timestamp");
+        JsonNode quote = first.path("indicators").path("quote");
+        if (!timestamps.isArray() || !quote.isArray() || quote.isEmpty()) {
+            return List.of();
+        }
+        JsonNode q = quote.get(0);
+        JsonNode closeArr = q.path("close");
+        JsonNode openArr = q.path("open");
+        JsonNode highArr = q.path("high");
+        JsonNode lowArr = q.path("low");
+        JsonNode volArr = q.path("volume");
+        if (!closeArr.isArray()) {
+            return List.of();
+        }
+        int len = Math.min(timestamps.size(), closeArr.size());
+        List<RawBar> out = new ArrayList<>();
+        for (int i = 0; i < len; i++) {
+            JsonNode cNode = closeArr.get(i);
+            if (cNode == null || cNode.isNull()) {
+                continue;
+            }
+            double close = cNode.asDouble(Double.NaN);
+            if (Double.isNaN(close) || close <= 0) {
+                continue;
+            }
+            long epoch = timestamps.get(i).asLong(0);
+            if (epoch <= 0) {
+                continue;
+            }
+            RawBar bar = new RawBar(
+                    epoch, zone,
+                    numOrNull(openArr, i), numOrNull(highArr, i), numOrNull(lowArr, i),
+                    close, longOrNull(volArr, i));
+            if (dailyDedup && !out.isEmpty()
+                    && Instant.ofEpochSecond(out.get(out.size() - 1).epoch).atZone(zone).toLocalDate()
+                       .equals(Instant.ofEpochSecond(epoch).atZone(zone).toLocalDate())) {
+                out.set(out.size() - 1, bar);
+            } else {
+                out.add(bar);
+            }
+        }
+        return out;
+    }
+
+    private static Double numOrNull(JsonNode arr, int i) {
+        if (!arr.isArray() || i >= arr.size()) {
+            return null;
+        }
+        JsonNode n = arr.get(i);
+        if (n == null || n.isNull()) {
+            return null;
+        }
+        double v = n.asDouble(Double.NaN);
+        return Double.isNaN(v) ? null : v;
+    }
+
+    private static Long longOrNull(JsonNode arr, int i) {
+        if (!arr.isArray() || i >= arr.size()) {
+            return null;
+        }
+        JsonNode n = arr.get(i);
+        if (n == null || n.isNull()) {
+            return null;
+        }
+        return n.asLong();
+    }
+
     private static List<DailyBar> mergeLatestQuote(
             List<DailyBar> bars,
             double price,
