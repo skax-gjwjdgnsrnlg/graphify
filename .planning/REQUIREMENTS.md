@@ -13,7 +13,7 @@
 - [ ] **DATA-02**: 시스템은 KOSPI 200 전체 종목의 2년치 일봉 OHLCV를 market_bars 테이블에 수집·유지한다 (기존 룰 명시 종목 한정 수집을 확장)
 - [ ] **DATA-03**: `RuleDefinition.Universe`는 `"volume_top_n"` 타입과 선택적 `additionalSymbols`를 지원한다 (예: `{"type":"volume_top_n","market":"KOSPI","topN":10,"additionalSymbols":[]}`)
 - [ ] **DATA-04**: 백테스트 시 `volume_top_n` 유니버스는 각 거래일별로 market_bars의 KOSPI 종목 중 거래량 상위 10종목을 동적으로 선정한다 (날짜마다 유니버스가 달라짐)
-- [ ] **DATA-05**: `BacktestService`의 volume null 전달 버그를 수정한다 — 이미 DB에 저장된 volume 값이 `RuleEvaluator`에 올바르게 전달되어야 한다
+- [x] **DATA-05**: `BacktestService`의 volume null 전달 버그를 수정한다 — 이미 DB에 저장된 volume 값이 `RuleEvaluator`에 올바르게 전달되어야 한다
 
 ### 백테스트 시각화 (CHART)
 
@@ -120,7 +120,7 @@
 | DATA-02 | Phase 0 | Pending |
 | DATA-03 | Phase 0 | Pending |
 | DATA-04 | Phase 0 | Pending |
-| DATA-05 | Phase 0 | Pending |
+| DATA-05 | Phase 0 | Complete |
 | CHART-01 | Phase 1 | Pending |
 | CHART-02 | Phase 1 | Pending |
 | CHART-03 | Phase 1 | Pending |

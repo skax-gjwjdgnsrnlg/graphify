@@ -42,6 +42,8 @@ Progress: [██░░░░░░░░] 20%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [Phase 0, 00-01]: volumesBySymbol 타입은 Map<String, Double[]> (nullable boxed) — Bar.volume()이 Double nullable이므로 primitive double[]는 NPE 위험
+- [Phase 0, 00-01]: 평가 루프에서 getOrDefault(symbol, null) 패턴 사용 — volumes 없는 봉은 null 전달해 RuleEvaluator NaN fallback 유지
 - [Phase 0, 00-02]: @DataJpaTest 슬라이스에서 Flyway 비활성화 — @AutoConfigureTestDatabase(replace=ANY) + @TestPropertySource 조합 사용 (application.properties 단독으로는 슬라이스 컨텍스트에서 무시됨)
 - [Phase 0, 00-02]: H2 testRuntimeOnly 추가 — PostgreSQL 전용 SQL 때문에 Flyway 마이그레이션 실행 안 함, ddl-auto=create-drop으로 스키마 생성
 - [Phase 0]: 유니버스 = KOSPI 거래량 상위 10종목 (자동) + additionalSymbols (수동 추가) 병행 방식 확정
@@ -58,13 +60,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 0]: BacktestService volume null 버그 — 즉시 수정 필요 (plan 00-01)
-- [Phase 0]: KOSPI 200 종목 리스트 초기 데이터 삽입 방법 결정 필요 (CSV import vs API vs 수동)
+- [Phase 0]: KOSPI 200 종목 리스트 초기 데이터 삽입 방법 결정 필요 (CSV import vs API vs 수동) [RESOLVED in 00-02]
 - [Phase 2]: 실시간 분봉 소스 확정 필요 — Yahoo Finance polling(5m) PAPER_LIVE 충분, LIVE는 토스증권 REST 시세 사용
 - [Phase 5]: 토스증권 Open API client_id/secret 환경변수 키 관리 방식 확정 필요 (AES-256-GCM 마스터 키 출처)
 
 ## Session Continuity
 
 Last session: 2026-06-20
-Stopped at: Completed 00-02-PLAN.md — in_kospi200 컬럼 + KOSPI 200 마스터 데이터 + CompanyEntityTest 4 tests GREEN
+Stopped at: Completed 00-01-PLAN.md — BacktestService volume null 버그 수정 (DATA-05), 5 tests GREEN
 Resume file: None
