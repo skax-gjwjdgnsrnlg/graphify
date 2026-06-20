@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: "Completed 01-01-PLAN.md — intraday data layer foundation (fetchIntradayForDateRange, findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs)"
-last_updated: "2026-06-20T14:40:48Z"
-last_activity: "2026-06-20 — 01-01 완료: YahooFinanceChartClient fetchIntradayForDateRange, MarketBarIntradayRepository findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs (CHART-01, CHART-02, CHART-03)"
+status: in_progress
+stopped_at: "Completed 01-02-PLAN.md — IntradayBacktestEngine 5m backtest engine, BacktestResult extended with sharpe/sortino/pf/drawdownSegments, 3 tests GREEN"
+last_updated: "2026-06-20T14:50:00Z"
+last_activity: "2026-06-20 — 01-02 완료: IntradayBacktestEngine(DB캐시+Yahoo fallback), BacktestResult LocalDateTime/통계 필드, testDrawdownSegments/testStatsCalculation/equityPointSerializesDatetime GREEN"
 progress:
   total_phases: 7
   completed_phases: 1
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 1 of 7 (5분봉 인트라데이 백테스팅 & 시각화)
-Plan: 1 of 4 in current phase
-Status: Phase 1 in progress — 01-01 complete
-Last activity: 2026-06-20 — 01-01 완료: YahooFinanceChartClient fetchIntradayForDateRange, MarketBarIntradayRepository findBySymbolAndRange, BacktestRequest timeFrom/timeTo, Wave-0 RED stubs
+Plan: 2 of 4 in current phase
+Status: Phase 1 in progress — 01-02 complete
+Last activity: 2026-06-20 — 01-02 완료: IntradayBacktestEngine(DB캐시+Yahoo fallback), BacktestResult LocalDateTime/sharpe/sortino/pf/drawdownSegments, 3 tests GREEN (CHART-01/02/03)
 
 Progress: [████░░░░░░] 40%
 
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 1, 01-01]: BacktestRequest record extended with nullable String timeFrom/timeTo at end of parameter list — service applies defaults "09:00"/"12:00" when null
 - [Phase 1, 01-01]: fetchIntradayForDateRange uses period1/period2 epoch approach (KST zone) not range string — enables arbitrary date ranges up to 60 days
 - [Phase 1, 01-01]: findBySymbolAndRange hardcodes interval='5m' in JPQL — plan 01 scope is 5m only; other intervals served by findBySymbolAndIntervalOrderByTsAsc
+- [Phase 1, 01-02]: computeDrawdownSegments uses >= peak (not >) for recovery detection — equity returning to previous peak correctly closes the drawdown segment
+- [Phase 1, 01-02]: package-private static computeSharpeRatio/Sortino/ProfitFactor/DrawdownSegments in IntradayBacktestEngine — avoids Spring context in unit tests
+- [Phase 1, 01-02]: BacktestService retains daily-bar load for volume_top_n symbolResolver — engine receives BiFunction lambda, not raw maps
 - [Roadmap]: recharts@2.15.0 for equity curve chart (SVG, React-friendly, 100-500 pts sufficient)
 - [Roadmap]: ShedLock mandatory before any LIVE rule activation (multi-instance safety)
 - [Roadmap]: AES-256-GCM via JPA AttributeConverter for Toss token storage (no plaintext in DB)
