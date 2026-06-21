@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-06-20T16:25:46.167Z"
-last_activity: "2026-06-21 — 01-04 완료: PaperBacktestPage에 EquityCurveChart 연결, Sharpe/Sortino/PF 카드 추가, 시간 입력 필드 추가, t.datetime 수정"
+status: in_progress
+stopped_at: "Completed 02-01-PLAN.md"
+last_updated: "2026-06-21T01:58:00Z"
+last_activity: "2026-06-21 — 02-01 완료: ShedLock 7.7.0, V31 마이그레이션(market_holidays/shedlock/paper_live_symbols), KrxMarketCalendar, SchedulerConfig"
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: 1 of 7 (5분봉 인트라데이 백테스팅 & 시각화)
-Plan: 4 of 4 in current phase (COMPLETE)
-Status: Phase 1 complete — all 4 plans done
-Last activity: 2026-06-21 — 01-04 완료: PaperBacktestPage에 EquityCurveChart 연결, Sharpe/Sortino/PF 카드 추가, 시간 입력 필드 추가, t.datetime 수정
+Phase: 2 of 7 (실시간 데이터 스케줄러)
+Plan: 1 of 4 in current phase (COMPLETE)
+Status: Phase 2, Plan 1 complete — ShedLock infra + KrxMarketCalendar done
+Last activity: 2026-06-21 — 02-01 완료: ShedLock 7.7.0, V31 마이그레이션(market_holidays/shedlock/paper_live_symbols), KrxMarketCalendar, SchedulerConfig
 
 Progress: [██████████] 100%
 
@@ -87,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 01]: [Phase 1, 01-04]: drawdownSegments ?? [] null-guard applied — server may return result with no drawdown segments
 - [Phase 01]: [Phase 1, 01-04]: StatCard component defined inline in PaperBacktestPage — no need for separate file at this scale
 - [Phase 01]: [Phase 1, 01-04]: lg:grid-cols-6 form layout with lg:col-span-1 on rule select — fits 6 inputs without overflow
+- [Phase 02, 02-01]: ShedLock 7.7.0 with JdbcTemplateLockProvider + usingDbTime() — uses DB clock to avoid clock skew between instances
+- [Phase 02, 02-01]: V31 migration seeds 2026 KRX holidays with ON CONFLICT DO NOTHING — safe for re-runs
+- [Phase 02, 02-01]: KrxMarketCalendar short-circuits on weekend before hitting DB — avoids unnecessary repository calls
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-20T16:25:46.163Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-realtime-data-scheduler/02-CONTEXT.md
+Last session: 2026-06-21T01:58:00Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-realtime-data-scheduler/02-01-SUMMARY.md

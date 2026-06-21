@@ -23,9 +23,9 @@
 
 ### 실시간 데이터 수집 & 평가 엔진 (LIVE)
 
-- [ ] **LIVE-01**: 시스템은 KRX 장 중(09:00–15:30 KST, 거래일)에 한해 5분마다 활성 종목의 인트라데이 봉을 수집한다
-- [ ] **LIVE-02**: 시스템은 KRX 공휴일 목록을 유지하고, 장 외에는 평가를 건너뛴다
-- [ ] **LIVE-03**: 시스템은 다중 인스턴스 환경에서 이중 평가가 발생하지 않도록 분산 잠금(ShedLock)을 적용한다
+- [x] **LIVE-01**: 시스템은 KRX 장 중(09:00–15:30 KST, 거래일)에 한해 5분마다 활성 종목의 인트라데이 봉을 수집한다
+- [x] **LIVE-02**: 시스템은 KRX 공휴일 목록을 유지하고, 장 외에는 평가를 건너뛴다
+- [x] **LIVE-03**: 시스템은 다중 인스턴스 환경에서 이중 평가가 발생하지 않도록 분산 잠금(ShedLock)을 적용한다
 - [ ] **LIVE-04**: 시스템은 데이터 수집 후 최신 봉이 10분 이상 오래된 경우 평가를 건너뛰고 경고를 기록한다
 - [ ] **LIVE-05**: 시스템은 PAPER_LIVE 상태인 룰을 매 평가 주기마다 자동으로 평가하고 가상 체결을 실행한다
 - [ ] **LIVE-06**: 시스템은 각 평가 주기 종료 시 가상 계좌의 평가금액 스냅샷을 DB에 저장한다
@@ -124,9 +124,9 @@
 | CHART-01 | Phase 1 | Complete |
 | CHART-02 | Phase 1 | Complete |
 | CHART-03 | Phase 1 | Complete |
-| LIVE-01 | Phase 2 | Pending |
-| LIVE-02 | Phase 2 | Pending |
-| LIVE-03 | Phase 2 | Pending |
+| LIVE-01 | Phase 2 | Complete |
+| LIVE-02 | Phase 2 | Complete |
+| LIVE-03 | Phase 2 | Complete |
 | LIVE-04 | Phase 2 | Pending |
 | LIVE-05 | Phase 3 | Pending |
 | LIVE-06 | Phase 3 | Pending |
