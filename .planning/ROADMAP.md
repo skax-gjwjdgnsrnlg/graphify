@@ -15,7 +15,7 @@
 - [x] **Phase 2: 실시간 데이터 수집 & 스케줄러 인프라** - KRX 장 중 5분 주기 분봉 수집, 공휴일 가드, ShedLock 분산 잠금을 구축한다 (completed 2026-06-21)
 - [x] **Phase 3: PAPER_LIVE 평가 엔진** - 스케줄러 기반 실시간 룰 평가 + 가상 체결 + 스냅샷 저장 엔진을 완성한다 (completed 2026-06-21)
 - [x] **Phase 4: 대시보드·룰 생애주기·모니터·리포트 UI** - 모의 대시보드, 룰 상태 전환 UI, 실시간 모니터, 성과 리포트 페이지를 완성한다 (completed 2026-06-21)
-- [ ] **Phase 5: 토스증권 OAuth & 자격증명 관리** - 토스증권 client_id/secret 암호화 저장, 토큰 자동 발급·갱신, 실계좌 잔고 조회를 구현한다
+- [x] **Phase 5: 토스증권 OAuth & 자격증명 관리** - 토스증권 client_id/secret 암호화 저장, 토큰 자동 발급·갱신, 실계좌 잔고 조회를 구현한다 (completed 2026-06-21)
 - [ ] **Phase 6: 실투자 주문 실행 & LIVE 승격** - LIVE 룰 평가에 따른 토스증권 실제 주문 발행, 시세 연동, 서킷 브레이커를 구현한다
 
 ## Phase Details
@@ -146,5 +146,5 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6
 | 2. 실시간 데이터 수집 & 스케줄러 인프라 | 2/2 | Complete   | 2026-06-21 |
 | 3. PAPER_LIVE 평가 엔진 | 2/2 | Complete   | 2026-06-21 |
 | 4. 대시보드·룰 생애주기·모니터·리포트 UI | 4/4 | Complete   | 2026-06-21 |
-| 5. 토스증권 OAuth & 자격증명 관리 | 1/2 | In Progress|  |
+| 5. 토스증권 OAuth & 자격증명 관리 | 2/2 | Complete   | 2026-06-21 |
 | 6. 실투자 주문 실행 & LIVE 승격 | 0/2 | Not started | - |

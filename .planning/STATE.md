@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-06-21T02:43:23.432Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-06-21T02:46:34.641Z"
 last_activity: "2026-06-21 — 04-01 완료: PaperDashboardService (mark-to-market positions, today realized PnL), PaperDashboardController, PaperDashboardPage (4 stat cards + positions table)"
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100%
 | Phase 04 P03 | 4m | 2 tasks | 6 files |
 | Phase 04 P04 | 5m | 2 tasks | 4 files |
 | Phase 05 P01 | 6m | 2 tasks | 8 files |
+| Phase 05 P02 | 7m | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,7 @@ Recent decisions affecting current work:
 - [Phase 04]: schedulerLastRun derived from max(ts) of paper_signal_log — avoids separate scheduler_run table
 - [Phase 04]: equity curve built from last 30 days of paper_equity_snapshots reversed to ascending — no separate date-range param needed for initial version
 - [Phase 05]: reuse SecretEncryptionService (AES-256-GCM) for Toss credentials — no new crypto code needed
+- [Phase 05]: TossAccountService returns empty list when unconfigured — dashboard never errors on Toss call
 
 ### Pending Todos
 
@@ -121,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T02:43:23.430Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-06-21T02:46:34.639Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
