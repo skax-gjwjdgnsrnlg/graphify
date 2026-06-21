@@ -61,6 +61,7 @@ public class BacktestService {
         this.intradayEngine = intradayEngine;
     }
 
+    @Transactional
     public ApiResponse<BacktestResult> run(BacktestRequest request) {
         RuleDefinition def = resolveDefinition(request);
         double initialCash = request.initialCash() != null && request.initialCash() > 0
@@ -98,6 +99,18 @@ public class BacktestService {
                 (d, date) -> resolveSymbolsForDate(d, date, closesBySymbol, indexBySymbol),
                 ledger
         );
+
+        // Mark rule as backtested so lifecycle promote becomes available (Phase 4)
+        if (request.ruleId() != null) {
+            Long userId = HistoryService.requireCurrentUserId();
+            ruleRepository.findByIdAndUserId(request.ruleId(), userId).ifPresent(rule -> {
+                if (!rule.isBacktested()) {
+                    rule.setBacktested(true);
+                    ruleRepository.save(rule);
+                }
+            });
+        }
+
         return ApiResponse.ok(result);
     }
 

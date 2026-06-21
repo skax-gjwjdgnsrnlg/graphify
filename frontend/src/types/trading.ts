@@ -48,7 +48,7 @@ export interface RuleDefinition {
   constraints?: RuleConstraints;
 }
 
-export type RuleStatus = "DRAFT" | "ACTIVE" | "PAUSED";
+export type RuleStatus = "DRAFT" | "ACTIVE" | "PAUSED" | "BACKTESTED" | "PAPER_LIVE" | "LIVE";
 export type RuleMode = "PAPER" | "LIVE";
 
 export interface TradingRule {
@@ -56,6 +56,7 @@ export interface TradingRule {
   name: string;
   mode: RuleMode;
   status: RuleStatus;
+  backtested: boolean;
   definition: RuleDefinition;
   promotedFrom: number | null;
   createdAt: string;
