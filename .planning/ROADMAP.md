@@ -135,8 +135,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: RuleBuilderForm 컴포넌트 (유니버스·진입·청산·사이징 섹션) + RuleDefinition 직렬화/역직렬화 로직
-- [ ] 06-02: PaperRulesPage에 빌더 통합 + 기존 JSON 에디터 교체 + 빌더↔JSON 토글(개발자용 선택)
+- [ ] 06-01-PLAN.md — RuleBuilderPage (유니버스·진입·청산·사이징·쿨다운 섹션) + trading.ts 타입 확장 + toDefinition/fromDefinition 직렬화 로직
+- [ ] 06-02-PLAN.md — router에 paper/rules/new·edit/:id 추가 + PaperRulesPage 모달 제거·navigate 전환 + 복제 버튼(RULE-06) + 쿨다운 컬럼(RULE-07)
 
 ### Phase 7: 실투자 주문 실행 & LIVE 승격
 **Goal**: LIVE 룰 평가 결과에 따라 토스증권 REST API로 실제 매수/매도 주문을 발행하고, 실시간 시세를 LIVE 평가에 활용하며, API 연속 실패 시 서킷 브레이커로 주문을 안전하게 중단한다
