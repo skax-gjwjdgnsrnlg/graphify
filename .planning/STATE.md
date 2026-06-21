@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: "Completed 02-01-PLAN.md"
-last_updated: "2026-06-21T01:58:00Z"
-last_activity: "2026-06-21 — 02-01 완료: ShedLock 7.7.0, V31 마이그레이션(market_holidays/shedlock/paper_live_symbols), KrxMarketCalendar, SchedulerConfig"
+stopped_at: "Completed 02-02-PLAN.md"
+last_updated: "2026-06-21T02:06:00Z"
+last_activity: "2026-06-21 — 02-02 완료: PaperLiveSymbol/Repository/Service, LiveDataScheduler(@Scheduled+@SchedulerLock), MarketDataPort.recentIntradayBars(), staleness guard"
 progress:
   total_phases: 7
   completed_phases: 2
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 2 of 7 (실시간 데이터 스케줄러)
-Plan: 1 of 4 in current phase (COMPLETE)
-Status: Phase 2, Plan 1 complete — ShedLock infra + KrxMarketCalendar done
-Last activity: 2026-06-21 — 02-01 완료: ShedLock 7.7.0, V31 마이그레이션(market_holidays/shedlock/paper_live_symbols), KrxMarketCalendar, SchedulerConfig
+Plan: 2 of 4 in current phase (COMPLETE)
+Status: Phase 2, Plan 2 complete — LiveDataScheduler + PaperLiveSymbolService + MarketDataPort.recentIntradayBars() done
+Last activity: 2026-06-21 — 02-02 완료: PaperLiveSymbol/Repository/Service, LiveDataScheduler(@Scheduled+@SchedulerLock), MarketDataPort.recentIntradayBars(), staleness guard
 
 Progress: [██████████] 100%
 
@@ -90,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 02, 02-01]: ShedLock 7.7.0 with JdbcTemplateLockProvider + usingDbTime() — uses DB clock to avoid clock skew between instances
 - [Phase 02, 02-01]: V31 migration seeds 2026 KRX holidays with ON CONFLICT DO NOTHING — safe for re-runs
 - [Phase 02, 02-01]: KrxMarketCalendar short-circuits on weekend before hitting DB — avoids unnecessary repository calls
+- [Phase 02, 02-02]: MarketBarIntraday @Column(name="\"interval\"") — H2 reserved word fix; PostgreSQL production column name unchanged
+- [Phase 02, 02-02]: LiveDataScheduler 15:30 guard test uses isTradingDay(any())=false pattern; Clock injection deferred to Phase 3 if needed
+- [Phase 02, 02-02]: MarketDataPort.recentIntradayBars() added as default method for Phase 3 engine consumption; DbMarketDataAdapter overrides it
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T01:58:00Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-realtime-data-scheduler/02-01-SUMMARY.md
+Last session: 2026-06-21T02:06:00Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: .planning/phases/02-realtime-data-scheduler/02-02-SUMMARY.md
