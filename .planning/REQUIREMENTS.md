@@ -33,7 +33,7 @@
 ### 모의 대시보드 (DASH)
 
 - [ ] **DASH-01**: 사용자는 모의 대시보드에서 가상 현금 잔고와 총 평가금액을 확인할 수 있다
-- [ ] **DASH-02**: 사용자는 모의 대시보드에서 현재 보유 포지션 목록(종목, 수량, 평균단가, 평가손익)을 확인할 수 있다
+- [x] **DASH-02**: 사용자는 모의 대시보드에서 현재 보유 포지션 목록(종목, 수량, 평균단가, 평가손익)을 확인할 수 있다
 - [x] **DASH-03**: 사용자는 모의 대시보드에서 오늘 실현된 손익 합계를 확인할 수 있다
 - [x] **DASH-04**: 사용자는 모의 대시보드에서 현재 PAPER_LIVE 상태인 룰 목록과 마지막 신호 발생 시각을 확인할 수 있다
 
@@ -132,7 +132,7 @@
 | LIVE-06 | Phase 3 | Pending |
 | MON-04 | Phase 3 | Complete |
 | DASH-01 | Phase 4 | Pending |
-| DASH-02 | Phase 4 | Pending |
+| DASH-02 | Phase 4 | Complete |
 | DASH-03 | Phase 4 | Complete |
 | DASH-04 | Phase 4 | Complete |
 | RULE-01 | Phase 4 | Complete |

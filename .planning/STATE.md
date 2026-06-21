@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-06-PLAN.md
-last_updated: "2026-06-21T07:05:20.102Z"
-last_activity: "2026-06-21 — 04-06 완료: PAPER-mode 룰 라이프사이클 route (paper/rules-lifecycle) + sidebar entry 추가, TradingRulesPage 재사용"
+stopped_at: Completed 04-07-PLAN.md
+last_updated: "2026-06-21T07:20:00.000Z"
+last_activity: "2026-06-21 — 04-07 완료: GET /api/v1/trading/paper/history endpoint + PaperHistoryService + PaperTradeHistoryItem DTO + PaperHistoryPage table (replaces 준비 중 stub)"
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
-  percent: 100
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 4 of 7 (대시보드·룰 생애주기·모니터·리포트 UI)
-Plan: 6 of 6 in current phase (COMPLETE)
-Status: Phase 4, Plan 6 complete — PAPER-mode 룰 라이프사이클 route + sidebar entry (TradingRulesPage 재사용)
-Last activity: 2026-06-21 — 04-06 완료: PAPER-mode 룰 라이프사이클 route (paper/rules-lifecycle) + sidebar entry 추가, TradingRulesPage 재사용
+Plan: 7 of 7 in current phase (COMPLETE)
+Status: Phase 4, Plan 7 complete — paper trade history endpoint + PaperHistoryPage table (replaces 준비 중 stub)
+Last activity: 2026-06-21 — 04-07 완료: GET /api/v1/trading/paper/history endpoint + PaperHistoryService + PaperTradeHistoryItem DTO + PaperHistoryPage table (replaces 준비 중 stub)
 
 Progress: [██████████] 100%
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 04 P04 | 5m | 2 tasks | 4 files |
 | Phase 05 P01 | 6m | 2 tasks | 8 files |
 | Phase 05 P02 | 7m | 2 tasks | 8 files |
+| Phase 04 P07 | 5m | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase 04]: equity curve built from last 30 days of paper_equity_snapshots reversed to ascending — no separate date-range param needed for initial version
 - [Phase 05]: reuse SecretEncryptionService (AES-256-GCM) for Toss credentials — no new crypto code needed
 - [Phase 05]: TossAccountService returns empty list when unconfigured — dashboard never errors on Toss call
+- [Phase 04, 04-07]: fee field set null in PaperTradeHistoryItem — paper_trades schema has no fee column; null avoids a migration; Phase 6 can add fee via migration + DTO update
+- [Phase 04, 04-07]: PaperTradeHistoryItem kept as generic-shaped record so Phase 6 LIVE history reuses same DTO/table structure with minimal additions
 - [Phase 04, 04-06]: Reuse TradingRulesPage unchanged under paper/rules-lifecycle route — promote/pause/resume/copy already wired to paperApi endpoints; only routing + nav needed
 
 ### Pending Todos
@@ -124,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-21T07:05:20.099Z
-Stopped at: Completed 04-06-PLAN.md
+Last session: 2026-06-21T07:20:00.000Z
+Stopped at: Completed 04-07-PLAN.md
 Resume file: None
