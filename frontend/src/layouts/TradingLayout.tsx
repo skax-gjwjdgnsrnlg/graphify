@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useTradingStore } from "@/stores/tradingStore";
+import { fetchTradingSettings } from "@/lib/tradingApi";
+import { PaperTradingToggle } from "@/components/trading/PaperTradingToggle";
 
-const navItems = [
-  { to: "/trading", label: "DDS Agent", end: true as const },
+interface NavItem {
+  to: string;
+  label: string;
+  end?: boolean;
+}
+
+const commonItems: NavItem[] = [
+  { to: "/trading", label: "DDS Agent", end: true },
+  { to: "/trading/settings", label: "토스 설정" },
+];
+
+const liveItems: NavItem[] = [
   { to: "/trading/dashboard", label: "대시보드" },
   { to: "/trading/history", label: "거래 이력" },
   { to: "/trading/rules", label: "현재 룰" },
@@ -11,7 +23,18 @@ const navItems = [
   { to: "/trading/monitor", label: "동작 모니터링" },
 ];
 
+const paperItems: NavItem[] = [
+  { to: "/trading/paper/dashboard", label: "모의 대시보드" },
+  { to: "/trading/paper/history", label: "모의 거래 이력" },
+  { to: "/trading/paper/rules", label: "모의 룰 설정" },
+  { to: "/trading/paper/backtest", label: "백테스트" },
+  { to: "/trading/paper/report", label: "모의 성과 리포트" },
+];
+
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const mode = useTradingStore((s) => s.mode);
+  const navItems = [...commonItems, ...(mode === "PAPER" ? paperItems : liveItems)];
+
   return (
     <nav className="flex flex-1 flex-col gap-1 p-3">
       {navItems.map((item) => (
@@ -35,10 +58,56 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function SidebarHeader() {
+  return (
+    <div className="border-b border-white/10 p-4">
+      <p className="text-lg font-semibold text-white">graphify</p>
+      <span className="mt-1 inline-block rounded-md border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">
+        트레이딩 봇
+      </span>
+    </div>
+  );
+}
+
+function SidebarFooter({ onExit }: { onExit: () => void }) {
+  return (
+    <div>
+      <PaperTradingToggle />
+      <div className="border-t border-white/10 p-3">
+        <button
+          type="button"
+          onClick={onExit}
+          className="text-sm text-gray-500 underline hover:text-gray-300"
+        >
+          메인으로
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function TradingLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const disableDarkMode = useTradingStore((s) => s.disableDarkMode);
+  const setMode = useTradingStore((s) => s.setMode);
+
+  // 진입 시 서버의 트레이딩 모드를 동기화
+  useEffect(() => {
+    let active = true;
+    void fetchTradingSettings()
+      .then((res) => {
+        if (active && res.data?.tradingMode) {
+          setMode(res.data.tradingMode);
+        }
+      })
+      .catch(() => {
+        /* 권한 없거나 실패 시 기본값(PAPER) 유지 */
+      });
+    return () => {
+      active = false;
+    };
+  }, [setMode]);
 
   const handleExit = () => {
     disableDarkMode();
@@ -49,22 +118,9 @@ export function TradingLayout() {
     <div className="flex min-h-screen bg-gray-950 text-white">
       {/* 데스크탑 사이드바 */}
       <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-gray-900 lg:flex lg:flex-col">
-        <div className="border-b border-white/10 p-4">
-          <p className="text-lg font-semibold text-white">graphify</p>
-          <span className="mt-1 inline-block rounded-md border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">
-            트레이딩 봇
-          </span>
-        </div>
+        <SidebarHeader />
         <SidebarNav />
-        <div className="border-t border-white/10 p-3">
-          <button
-            type="button"
-            onClick={handleExit}
-            className="text-sm text-gray-500 underline hover:text-gray-300"
-          >
-            메인으로
-          </button>
-        </div>
+        <SidebarFooter onExit={handleExit} />
       </aside>
 
       {/* 모바일 드로어 */}
@@ -77,22 +133,9 @@ export function TradingLayout() {
             onClick={() => setDrawerOpen(false)}
           />
           <aside className="relative flex h-full w-64 flex-col border-r border-white/10 bg-gray-900 shadow-xl">
-            <div className="border-b border-white/10 p-4">
-              <p className="text-lg font-semibold text-white">graphify</p>
-              <span className="mt-1 inline-block rounded-md border border-emerald-500/40 px-2 py-0.5 text-xs text-emerald-400">
-                트레이딩 봇
-              </span>
-            </div>
+            <SidebarHeader />
             <SidebarNav onNavigate={() => setDrawerOpen(false)} />
-            <div className="border-t border-white/10 p-3">
-              <button
-                type="button"
-                onClick={handleExit}
-                className="text-sm text-gray-500 underline hover:text-gray-300"
-              >
-                메인으로
-              </button>
-            </div>
+            <SidebarFooter onExit={handleExit} />
           </aside>
         </div>
       ) : null}

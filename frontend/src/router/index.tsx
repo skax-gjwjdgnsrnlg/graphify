@@ -11,6 +11,13 @@ import { TradingHistoryPage } from "@/pages/trading/TradingHistoryPage";
 import { TradingRulesPage } from "@/pages/trading/TradingRulesPage";
 import { TradingRulesEditPage } from "@/pages/trading/TradingRulesEditPage";
 import { TradingMonitorPage } from "@/pages/trading/TradingMonitorPage";
+import { TossSettingsPage } from "@/pages/trading/TossSettingsPage";
+import { PaperDashboardPage } from "@/pages/trading/paper/PaperDashboardPage";
+import { PaperHistoryPage } from "@/pages/trading/paper/PaperHistoryPage";
+import { PaperRulesPage } from "@/pages/trading/paper/PaperRulesPage";
+import { PaperBacktestPage } from "@/pages/trading/paper/PaperBacktestPage";
+import { PaperReportPage } from "@/pages/trading/paper/PaperReportPage";
+import { ModeGuard } from "@/components/trading/ModeGuard";
 import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { BootstrapStatusPage } from "@/pages/BootstrapStatusPage";
 import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
@@ -103,11 +110,90 @@ export const router = createBrowserRouter([
     element: <TradingLayout />,
     children: [
       { index: true, element: <TradingChatPage /> },
-      { path: "dashboard", element: <TradingDashboardPage /> },
-      { path: "history", element: <TradingHistoryPage /> },
-      { path: "rules", element: <TradingRulesPage /> },
-      { path: "rules/edit", element: <TradingRulesEditPage /> },
-      { path: "monitor", element: <TradingMonitorPage /> },
+      {
+        path: "dashboard",
+        element: (
+          <ModeGuard mode="LIVE">
+            <TradingDashboardPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "history",
+        element: (
+          <ModeGuard mode="LIVE">
+            <TradingHistoryPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "rules",
+        element: (
+          <ModeGuard mode="LIVE">
+            <TradingRulesPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "rules/edit",
+        element: (
+          <ModeGuard mode="LIVE">
+            <TradingRulesEditPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "monitor",
+        element: (
+          <ModeGuard mode="LIVE">
+            <TradingMonitorPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "settings",
+        element: <TossSettingsPage />,
+      },
+      {
+        path: "paper/dashboard",
+        element: (
+          <ModeGuard mode="PAPER">
+            <PaperDashboardPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "paper/history",
+        element: (
+          <ModeGuard mode="PAPER">
+            <PaperHistoryPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "paper/rules",
+        element: (
+          <ModeGuard mode="PAPER">
+            <PaperRulesPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "paper/backtest",
+        element: (
+          <ModeGuard mode="PAPER">
+            <PaperBacktestPage />
+          </ModeGuard>
+        ),
+      },
+      {
+        path: "paper/report",
+        element: (
+          <ModeGuard mode="PAPER">
+            <PaperReportPage />
+          </ModeGuard>
+        ),
+      },
     ],
   },
   {
