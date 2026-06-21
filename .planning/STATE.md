@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-06-21T02:46:34.641Z"
+last_updated: "2026-06-21T03:12:21.624Z"
 last_activity: "2026-06-21 — 04-01 완료: PaperDashboardService (mark-to-market positions, today realized PnL), PaperDashboardController, PaperDashboardPage (4 stat cards + positions table)"
 progress:
   total_phases: 7
