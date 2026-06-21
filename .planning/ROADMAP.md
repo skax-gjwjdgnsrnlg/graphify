@@ -97,13 +97,16 @@ Plans:
   3. 모니터 페이지에서 신호 평가 로그(시각·종목·신호·결과), 스케줄러 마지막 실행 시각, 장중/장외 상태, 오늘 체결 피드가 표시된다
   4. 성과 리포트 페이지에서 모의 실행 기간의 수익 곡선·수익률·MDD·승률·거래 횟수·Sharpe/Sortino Ratio가 표시된다
   5. LIVE 룰은 편집 버튼이 비활성화되고, 수정 시 DRAFT 복사본 생성 안내가 표시된다
-**Plans**: 2 plans
+**Plans**: 7 plans (04-01..04-04 base + 04-05..04-07 gap-closure)
 
 Plans:
-- [ ] 04-01: PaperDashboardPage 완성 (잔고·포지션·손익 API + UI)
-- [ ] 04-02: 룰 생애주기 상태 전환 API + 룰 목록 배지 UI + PAPER_LIVE 승격 버튼
-- [ ] 04-03: TradingMonitorPage (신호 로그·스케줄러 상태·체결 피드)
-- [ ] 04-04: PaperReportPage (수익 곡선·지표·Sharpe/Sortino) + LIVE 룰 편집 차단
+- [x] 04-01: PaperDashboardPage 완성 (잔고·포지션·손익 API + UI)
+- [x] 04-02: 룰 생애주기 상태 전환 API + 룰 목록 배지 UI + PAPER_LIVE 승격 버튼
+- [x] 04-03: TradingMonitorPage (신호 로그·스케줄러 상태·체결 피드)
+- [x] 04-04: PaperReportPage (수익 곡선·지표·Sharpe/Sortino) + LIVE 룰 편집 차단
+- [ ] 04-05: [gap] PAPER_LIVE 활성화 수정 — promote가 paper_live_symbols 채우고, 평가/수집 종목 소스를 paper_live_symbols로 일원화
+- [ ] 04-06: [gap] PAPER 모드에서 승격 UI 도달 — TradingRulesPage를 PAPER 라우트/사이드바에 노출
+- [ ] 04-07: [gap] 모의 거래 이력 — paper_trades 조회 엔드포인트 + paperApi + PaperHistoryPage 테이블
 
 ### Phase 5: 토스증권 OAuth & 자격증명 관리
 **Goal**: 사용자가 토스증권 client_id와 client_secret을 안전하게 등록하고, 시스템이 액세스 토큰을 자동으로 발급·갱신하며, 연동된 실계좌 잔고를 대시보드에서 조회할 수 있다
