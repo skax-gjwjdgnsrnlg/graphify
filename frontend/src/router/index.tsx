@@ -194,6 +194,14 @@ export const router = createBrowserRouter([
           </ModeGuard>
         ),
       },
+      {
+        path: "paper/rules-lifecycle",
+        element: (
+          <ModeGuard mode="PAPER">
+            <TradingRulesPage />
+          </ModeGuard>
+        ),
+      },
     ],
   },
   {

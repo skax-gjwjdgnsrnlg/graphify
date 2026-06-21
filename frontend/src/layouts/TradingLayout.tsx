@@ -27,6 +27,7 @@ const paperItems: NavItem[] = [
   { to: "/trading/paper/dashboard", label: "모의 대시보드" },
   { to: "/trading/paper/history", label: "모의 거래 이력" },
   { to: "/trading/paper/rules", label: "모의 룰 설정" },
+  { to: "/trading/paper/rules-lifecycle", label: "룰 라이프사이클" },
   { to: "/trading/paper/backtest", label: "백테스트" },
   { to: "/trading/paper/report", label: "모의 성과 리포트" },
 ];
