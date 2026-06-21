@@ -20,4 +20,11 @@ public interface OrderExecutorPort {
      */
     TradeResult execute(Signal signal, TradingRule rule, String symbol,
                         double price, Instant ts, String indicatorSnapshotJson);
+
+    /**
+     * 이 실행기가 해당 룰을 처리할 수 있는지. mode 기반 라우팅.
+     * Phase 6: TossOrderExecutor가 supports(rule.getMode()=="LIVE")를 구현하고 Spring이 자동 주입 →
+     * LiveEvaluationService 변경 불필요.
+     */
+    boolean supports(TradingRule rule);
 }

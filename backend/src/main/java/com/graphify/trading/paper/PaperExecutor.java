@@ -43,6 +43,11 @@ public class PaperExecutor implements OrderExecutorPort {
     }
 
     @Override
+    public boolean supports(TradingRule rule) {
+        return "PAPER".equals(rule.getMode());
+    }
+
+    @Override
     @Transactional
     public TradeResult execute(Signal signal, TradingRule rule, String symbol,
                                double price, Instant ts, String indicatorSnapshotJson) {

@@ -45,7 +45,7 @@ public class LiveEvaluationService {
     private final MarketDataPort                marketDataPort;
     private final MarketBarIntradayRepository   intradayRepo;
     private final RuleEvaluator                 ruleEvaluator;
-    private final OrderExecutorPort             executor;
+    private final List<OrderExecutorPort>       executors;
     private final PaperAccountRepository        accountRepo;
     private final PaperPositionRepository       positionRepo;
     private final PaperEquitySnapshotRepository snapshotRepo;
@@ -56,7 +56,7 @@ public class LiveEvaluationService {
             MarketDataPort marketDataPort,
             MarketBarIntradayRepository intradayRepo,
             RuleEvaluator ruleEvaluator,
-            OrderExecutorPort executor,
+            List<OrderExecutorPort> executors,
             PaperAccountRepository accountRepo,
             PaperPositionRepository positionRepo,
             PaperEquitySnapshotRepository snapshotRepo,
@@ -65,11 +65,18 @@ public class LiveEvaluationService {
         this.marketDataPort = marketDataPort;
         this.intradayRepo   = intradayRepo;
         this.ruleEvaluator  = ruleEvaluator;
-        this.executor       = executor;
+        this.executors      = executors;
         this.accountRepo    = accountRepo;
         this.positionRepo   = positionRepo;
         this.snapshotRepo   = snapshotRepo;
         this.objectMapper   = objectMapper;
+    }
+
+    private OrderExecutorPort executorFor(TradingRule rule) {
+        return executors.stream()
+            .filter(e -> e.supports(rule))
+            .findFirst()
+            .orElse(null);
     }
 
     /**
@@ -164,6 +171,12 @@ public class LiveEvaluationService {
         }
 
         if (signal != Signal.HOLD) {
+            OrderExecutorPort executor = executorFor(rule);
+            if (executor == null) {
+                log.warn("No OrderExecutorPort supports rule {} (mode={}), skipping execution",
+                    rule.getId(), rule.getMode());
+                return;
+            }
             executor.execute(signal, rule, symbol, lastPrice, tickTime, indicatorJson);
         }
     }
