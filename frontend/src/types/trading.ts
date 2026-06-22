@@ -1,3 +1,13 @@
+// 캔들 차트 — OHLCV 봉 데이터 (lightweight-charts v5 시계열 포맷)
+export interface CandleBar {
+  time: number;   // epoch-seconds (UTC)
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 // 룰 definition 스키마 — DESIGN.md [v1.3.0] 8절과 일치
 export type RuleIndicator = "PRICE" | "SMA" | "EMA" | "RSI" | "VOLUME";
 export type RuleOperator = ">" | ">=" | "<" | "<=" | "==" | "crossAbove" | "crossBelow";
