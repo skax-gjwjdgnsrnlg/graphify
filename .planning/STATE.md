@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 6.7 Plan 02 완료 — YahooCumulativeVolumeAdapter (live VolumeRankingProvider, 5m intraday 누적 거래량 + COMMON_STOCK 필터 + 1분 TTL 캐시)
-stopped_at: Completed 06.7-01-PLAN.md (checkpoint — KRX spike evidence recorded, awaiting Plan 02 strategy decision)
-last_updated: "2026-06-22T15:22:29.267Z"
-last_activity: "2026-06-22 — 06.7-02 완료: YahooCumulativeVolumeAdapter TDD 6/6 green (DATA-06-SC2, SC3); KRX 직접 연동 deferred"
+status: Phase 6.7 Plan 03 완료 — VolumeRankRefresher(매 틱 재선정+보유 포지션 union) + LiveEvaluationService 진입 게이팅 + DESIGN.md v1.5.0 일관성 방침 문서화. DATA-06 종결.
+stopped_at: Completed 06.7-03-PLAN.md
+last_updated: "2026-06-23T00:00:00.000Z"
+last_activity: "2026-06-23 — 06.7-03 완료: VolumeRankRefresher 4/4 green(SC3/SC4), LiveEvaluationServiceVolumeTest 4/4 green(SC5b), DESIGN.md v1.5.0(SC5), 전체 테스트 BUILD SUCCESSFUL"
 progress:
   total_phases: 12
   completed_phases: 9
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: 6.7 (실시간 거래량 상위 유니버스)
-Plan: 06.7-02 완료 → 06.7-03 진행 예정 (VolumeRankRefresher — live re-selection)
-Status: Phase 6.7 Plan 02 완료 — YahooCumulativeVolumeAdapter (live VolumeRankingProvider, 5m intraday 누적 거래량 + COMMON_STOCK 필터 + 1분 TTL 캐시)
-Last activity: 2026-06-22 — 06.7-02 완료: YahooCumulativeVolumeAdapter TDD 6/6 green (DATA-06-SC2, SC3); KRX 직접 연동 deferred
+Phase: 6.7 (실시간 거래량 상위 유니버스) — 완료
+Plan: 06.7-03 완료 (Phase 6.7 전체 완료 — DATA-06 종결)
+Status: Phase 6.7 Plan 03 완료 — VolumeRankRefresher(매 틱 재선정+보유 포지션 union) + LiveEvaluationService 진입 게이팅 + DESIGN.md v1.5.0 일관성 방침 문서화. DATA-06 종결.
+Last activity: 2026-06-23 — 06.7-03 완료: VolumeRankRefresher 4/4 green(SC3/SC4), LiveEvaluationServiceVolumeTest 4/4 green(SC5b), DESIGN.md v1.5.0(SC5), 전체 테스트 BUILD SUCCESSFUL
 
-Progress: [██████████] 97% (9/12 phases active, 34/34 plans complete)
+Progress: [██████████] 98% (Phase 6.7 완료, 전체 3 plans 완료)
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [██████████] 97% (9/12 phases active, 34/34 plans 
 | Phase 06.6 P02 | 6m | 2 tasks | 6 files |
 | Phase 06.6 P03 | 4m | 4 tasks | 4 files |
 | Phase 06.7 P02 | 4m | 2 tasks | 3 files |
+| Phase 06.7 P03 | 8m | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -167,6 +168,10 @@ Recent decisions affecting current work:
 - [Phase 06.7, 06.7-02]: Bean name @Component("yahooCumulativeVolumeAdapter") — Plan 03 injects via @Qualifier; DbVolumeRankingAdapter coexists for backtest
 - [Phase 06.7, 06.7-02]: JPQL GROUP BY SUM in MarketBarIntradayRepository.findCumulativeVolumeByMarketAndDate — single aggregation query with PageRequest topN limit; no N+1
 - [Phase 06.7, 06.7-02]: Empty fetch does NOT update cache (RESEARCH Pitfall 5) — prevents stale-empty poisoning; retry on next tick
+- [Phase 06.7, 06.7-03]: buildEntrySet() returns null for non-volume_top_n rules — null means no gating, avoids boolean flag proliferation
+- [Phase 06.7, 06.7-03]: entry gate fires in evaluateSymbol() AFTER positionRepo.findByAccountIdAndSymbol (position check first, gate in empty-position branch)
+- [Phase 06.7, 06.7-03]: VolumeRankRefresher per-rule try/catch + log.warn — one rule failure does not block other rules or the full tick
+- [Phase 06.7, 06.7-03]: DESIGN.md v1.5.0 added as new top-level entry — backtest(완결 일봉)↔live(Yahoo 5m 누적) 기준 차이 수용·문서화, 재정렬 Deferred
 - [Phase 06.6, 06.6-01]: CandleBarDto time = epoch seconds (getEpochSecond) not millis — lightweight-charts requirement (time < 1e11 for current-era dates)
 - [Phase 06.6, 06.6-01]: open/high/low fall back to close when null in CandleBarDto.from() — no null OHLC ever reaches the frontend
 - [Phase 06.6, 06.6-01]: GET /bars returns full KST day session (no trade-window slicing) — locked decision §2; findBySymbolAndRange orders ts ASC
@@ -187,6 +192,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-22T15:11:00Z
-Stopped at: Completed 06.7-01-PLAN.md (checkpoint — KRX spike evidence recorded, awaiting Plan 02 strategy decision)
+Last session: 2026-06-23T00:00:00Z
+Stopped at: Completed 06.7-03-PLAN.md — Phase 6.7 전체 완료 (DATA-06 종결)
 Resume file: None
