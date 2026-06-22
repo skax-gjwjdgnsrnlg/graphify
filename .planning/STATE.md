@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 6.7 Plan 01 완료 — VolumeRankingProvider 포트 + DbVolumeRankingAdapter + V36 마이그레이션; KRX 스파이크: auth-wall → Plan 02 Yahoo fallback
-stopped_at: Completed 06.7-01-PLAN.md (checkpoint reached — KRX spike evidence recorded)
-last_updated: "2026-06-22T15:11:00Z"
-last_activity: "2026-06-22 — 06.7-01 완료: V36 instrument_type 마이그레이션, VolumeRankingProvider 포트, DbVolumeRankingAdapter TDD 3/3 green, KRX spike auth-wall 확인 → Yahoo fallback 권장"
+status: Phase 6.7 Plan 02 완료 — YahooCumulativeVolumeAdapter (live VolumeRankingProvider, 5m intraday 누적 거래량 + COMMON_STOCK 필터 + 1분 TTL 캐시)
+stopped_at: Completed 06.7-01-PLAN.md (checkpoint — KRX spike evidence recorded, awaiting Plan 02 strategy decision)
+last_updated: "2026-06-22T15:22:29.267Z"
+last_activity: "2026-06-22 — 06.7-02 완료: YahooCumulativeVolumeAdapter TDD 6/6 green (DATA-06-SC2, SC3); KRX 직접 연동 deferred"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 9
-  total_plans: 32
-  completed_plans: 32
-  percent: 74
+  total_plans: 34
+  completed_plans: 33
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 6.7 (실시간 거래량 상위 유니버스)
-Plan: 06.7-01 완료 (checkpoint) → 06.7-02 진행 예정 (Yahoo fallback live adapter)
-Status: Phase 6.7 Plan 01 완료 — VolumeRankingProvider 포트 + DbVolumeRankingAdapter + V36 마이그레이션; KRX 스파이크: auth-wall → Plan 02 Yahoo fallback
-Last activity: 2026-06-22 — 06.7-01 완료: V36 instrument_type 마이그레이션, VolumeRankingProvider 포트, DbVolumeRankingAdapter TDD 3/3 green, KRX spike auth-wall 확인
+Plan: 06.7-02 완료 → 06.7-03 진행 예정 (VolumeRankRefresher — live re-selection)
+Status: Phase 6.7 Plan 02 완료 — YahooCumulativeVolumeAdapter (live VolumeRankingProvider, 5m intraday 누적 거래량 + COMMON_STOCK 필터 + 1분 TTL 캐시)
+Last activity: 2026-06-22 — 06.7-02 완료: YahooCumulativeVolumeAdapter TDD 6/6 green (DATA-06-SC2, SC3); KRX 직접 연동 deferred
 
-Progress: [████████░░] 74% (9/11 phases complete, 32/32 plans complete)
+Progress: [██████████] 97% (9/12 phases active, 34/34 plans complete)
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [████████░░] 74% (9/11 phases complete, 32/32 plan
 | Phase 06.6 P01 | 5m | 3 tasks | 4 files |
 | Phase 06.6 P02 | 6m | 2 tasks | 6 files |
 | Phase 06.6 P03 | 4m | 4 tasks | 4 files |
+| Phase 06.7 P02 | 4m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,10 @@ Recent decisions affecting current work:
 - [Phase 06.7, 06.7-01]: KRX getJsonData.cmd blocked (HTTP 400 LOGOUT) — requires KRX_ID/KRX_PW session; Plan 02 live adapter uses Yahoo 5m cumulative fallback (reachability/auth gate failed)
 - [Phase 06.7, 06.7-01]: DbVolumeRankingAdapter NOT @Primary — coexists with live adapter; findTopVolumeByMarketOnDate uses instrument_type='COMMON_STOCK' (no in_kospi200 restriction — Pitfall 4 fix)
 - [Phase 06.7, 06.7-01]: Intraday freshness verification (KRX ACC_TRDVOL update cadence) deferred to market-hours (09:00–15:30 KST) manual check — cannot verify off-hours
+- [Phase 06.7, 06.7-02]: YahooCumulativeVolumeAdapter adopted as live VolumeRankingProvider — KRX auth-walled; Yahoo 5m intraday cumulative DB aggregation is the shipped live source
+- [Phase 06.7, 06.7-02]: Bean name @Component("yahooCumulativeVolumeAdapter") — Plan 03 injects via @Qualifier; DbVolumeRankingAdapter coexists for backtest
+- [Phase 06.7, 06.7-02]: JPQL GROUP BY SUM in MarketBarIntradayRepository.findCumulativeVolumeByMarketAndDate — single aggregation query with PageRequest topN limit; no N+1
+- [Phase 06.7, 06.7-02]: Empty fetch does NOT update cache (RESEARCH Pitfall 5) — prevents stale-empty poisoning; retry on next tick
 - [Phase 06.6, 06.6-01]: CandleBarDto time = epoch seconds (getEpochSecond) not millis — lightweight-charts requirement (time < 1e11 for current-era dates)
 - [Phase 06.6, 06.6-01]: open/high/low fall back to close when null in CandleBarDto.from() — no null OHLC ever reaches the frontend
 - [Phase 06.6, 06.6-01]: GET /bars returns full KST day session (no trade-window slicing) — locked decision §2; findBySymbolAndRange orders ts ASC
