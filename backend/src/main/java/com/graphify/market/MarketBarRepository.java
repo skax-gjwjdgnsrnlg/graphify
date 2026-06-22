@@ -34,6 +34,26 @@ public interface MarketBarRepository extends JpaRepository<MarketBar, Long> {
             Pageable pageable);
 
     /**
+     * 지정 시장의 COMMON_STOCK 종목 중 날짜별 거래량 상위 N 티커 반환 (DATA-06).
+     * ETF/ETN/우선주 제외 (instrument_type = 'COMMON_STOCK' 조건).
+     * in_kospi200 제약 없음 (RESEARCH Pitfall 4 — 전체 KOSPI 보통주 대상).
+     */
+    @Query("""
+            SELECT b.symbol
+            FROM MarketBar b
+            JOIN Company c ON c.ticker = b.symbol
+            WHERE b.tradingDate = :date
+              AND c.market = :market
+              AND c.instrumentType = 'COMMON_STOCK'
+              AND b.volume IS NOT NULL
+            ORDER BY b.volume DESC
+            """)
+    List<String> findTopVolumeByMarketOnDate(
+            @Param("market") String market,
+            @Param("date") LocalDate date,
+            Pageable pageable);
+
+    /**
      * 지정 시장의 in_kospi200=true 종목 전체 고유 티커 반환.
      * volume_top_n 백테스트 시 데이터 사전 로드 후보군 생성에 사용.
      */
