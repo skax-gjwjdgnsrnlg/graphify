@@ -1,5 +1,7 @@
 package com.graphify.trading.backtest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphify.company.Company;
 import com.graphify.company.CompanyRepository;
 import com.graphify.company.market.IntradayBar;
@@ -8,6 +10,7 @@ import com.graphify.market.MarketBarIntraday;
 import com.graphify.market.MarketBarIntradayRepository;
 import com.graphify.trading.backtest.dto.BacktestRequest;
 import com.graphify.trading.backtest.dto.BacktestResult;
+import com.graphify.trading.engine.EvalResult;
 import com.graphify.trading.engine.FillSimulator;
 import com.graphify.trading.engine.PaperLedger;
 import com.graphify.trading.engine.RuleEvaluator;
@@ -20,6 +23,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -45,6 +49,7 @@ public class IntradayBacktestEngine {
     private final FillSimulator fillSimulator;
     private final IntradayBarCacheService cacheService;
     private final CompanyRepository companyRepository;
+    private final ObjectMapper objectMapper;
 
     public IntradayBacktestEngine(
             MarketBarIntradayRepository intradayRepository,
@@ -52,7 +57,8 @@ public class IntradayBacktestEngine {
             RuleEvaluator ruleEvaluator,
             FillSimulator fillSimulator,
             IntradayBarCacheService cacheService,
-            CompanyRepository companyRepository
+            CompanyRepository companyRepository,
+            ObjectMapper objectMapper
     ) {
         this.intradayRepository = intradayRepository;
         this.yahooClient = yahooClient;
@@ -60,6 +66,7 @@ public class IntradayBacktestEngine {
         this.fillSimulator = fillSimulator;
         this.cacheService = cacheService;
         this.companyRepository = companyRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -122,17 +129,23 @@ public class IntradayBacktestEngine {
 
                     if (ledger.holds(symbol)) {
                         double entryPrice = ledger.position(symbol).avgPrice();
-                        if (ruleEvaluator.exitTriggered(def.exit(), closes, volumes, i, entryPrice)) {
-                            ledger.sell(date, symbol, closes[i]);
+                        EvalResult exitResult = ruleEvaluator.evalExit(def.exit(), closes, volumes, i, entryPrice);
+                        if (exitResult.triggered()) {
+                            String rationaleJson = buildRationale(exitResult, "SELL");
+                            ledger.sell(date, symbol, closes[i], rationaleJson);
                             lastExitIndex.put(symbol, gIdx);
                         }
                     } else {
                         Integer exitedAt = lastExitIndex.get(symbol);
                         if (exitedAt != null && gIdx - exitedAt <= cooldown) {
                             // in cooldown — skip
-                        } else if (ruleEvaluator.entryTriggered(def.entry(), closes, volumes, i)) {
-                            double qty = sizeQty(def.sizing(), ledger.cash(), closes[i]);
-                            ledger.buy(date, symbol, qty, closes[i]);
+                        } else {
+                            EvalResult entryResult = ruleEvaluator.evalEntry(def.entry(), closes, volumes, i);
+                            if (entryResult.triggered()) {
+                                String rationaleJson = buildRationale(entryResult, "BUY");
+                                double qty = sizeQty(def.sizing(), ledger.cash(), closes[i]);
+                                ledger.buy(date, symbol, qty, closes[i], rationaleJson);
+                            }
                         }
                     }
 
@@ -401,6 +414,36 @@ public class IntradayBacktestEngine {
             return 0.0;
         }
         return Math.sqrt(sumSq / returns.length); // denominator = total N (not just downside N)
+    }
+
+    /**
+     * EvalResult를 RESEARCH Discretion 2 스키마의 rationale JSON 문자열로 직렬화.
+     * {side, exitReason, exitPct, conditions:[{expr,leftLabel,leftValue,op,rightLabel,rightValue,passed}]}
+     */
+    private String buildRationale(EvalResult r, String side) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("side", side);
+        map.put("exitReason", r.exitReason() != null ? r.exitReason().name() : null);
+        map.put("exitPct", r.exitPct());
+        List<Map<String, Object>> conditions = new ArrayList<>();
+        for (EvalResult.ConditionResult c : r.conditions()) {
+            Map<String, Object> cMap = new LinkedHashMap<>();
+            cMap.put("expr", c.expr());
+            cMap.put("leftLabel", c.leftLabel());
+            cMap.put("leftValue", c.leftValue());
+            cMap.put("op", c.op());
+            cMap.put("rightLabel", c.rightLabel());
+            cMap.put("rightValue", c.rightValue());
+            cMap.put("passed", c.passed());
+            conditions.add(cMap);
+        }
+        map.put("conditions", conditions);
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize rationale JSON for side={}", side, e);
+            return null;
+        }
     }
 
     private double sizeQty(RuleDefinition.Sizing sizing, double cash, double price) {
