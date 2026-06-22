@@ -4,6 +4,7 @@ import { fetchPaperRules, runBacktest } from "@/lib/ruleApi";
 import { ApiRequestError } from "@/lib/apiClient";
 import type { BacktestResult } from "@/types/trading";
 import { EquityCurveChart } from "@/components/backtest/EquityCurveChart";
+import { TradeRationaleRow, parseRationale } from "@/components/trading/TradeRationaleRow";
 
 const fmtMoney = (n: number) =>
   n.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원";
@@ -20,6 +21,7 @@ export function PaperBacktestPage() {
   const [timeTo, setTimeTo] = useState("12:00");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: rules } = useQuery({
     queryKey: ["trading", "paper", "rules"],
@@ -42,6 +44,7 @@ export function PaperBacktestPage() {
     },
     onSuccess: (res) => {
       setResult(res.data ?? null);
+      setExpandedId(null);
       setError(null);
     },
     onError: (err) => {
@@ -185,62 +188,93 @@ export function PaperBacktestPage() {
             </div>
           </div>
 
-          {/* Trade history table */}
-          <div className="overflow-hidden rounded-lg border border-white/10 bg-gray-900/50">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-left text-gray-400">
-                  <th className="px-4 py-3 font-medium">일시</th>
-                  <th className="px-4 py-3 font-medium">종목</th>
-                  <th className="px-4 py-3 font-medium">구분</th>
-                  <th className="px-4 py-3 text-right font-medium">수량</th>
-                  <th className="px-4 py-3 text-right font-medium">가격</th>
-                  <th className="px-4 py-3 text-right font-medium">손익</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.trades.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
-                      체결된 거래가 없습니다.
-                    </td>
+          {/* Trade history table with rationale accordion */}
+          <div>
+            <p className="mb-2 text-xs text-gray-500">행을 클릭하면 매매 근거를 확인할 수 있습니다.</p>
+            <div className="overflow-hidden rounded-lg border border-white/10 bg-gray-900/50">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-left text-gray-400">
+                    <th className="px-4 py-3 font-medium">일시</th>
+                    <th className="px-4 py-3 font-medium">종목</th>
+                    <th className="px-4 py-3 font-medium">구분</th>
+                    <th className="px-4 py-3 text-right font-medium">수량</th>
+                    <th className="px-4 py-3 text-right font-medium">가격</th>
+                    <th className="px-4 py-3 text-right font-medium">손익</th>
+                    <th className="px-4 py-3 text-right font-medium w-8"></th>
                   </tr>
-                ) : (
-                  result.trades.map((t, i) => (
-                    <tr key={i} className="border-b border-white/5 last:border-0">
-                      <td className="px-4 py-2 text-gray-300">{t.datetime}</td>
-                      <td className="px-4 py-2 text-white">
-                        {t.companyName ? `${t.companyName} (${t.symbol})` : t.symbol}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={
-                            t.side === "BUY" ? "text-emerald-400" : "text-red-400"
-                          }
-                        >
-                          {t.side === "BUY" ? "매수" : "매도"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right text-gray-300">{t.qty}</td>
-                      <td className="px-4 py-2 text-right text-gray-300">
-                        {t.price.toLocaleString("ko-KR")}
-                      </td>
-                      <td
-                        className={`px-4 py-2 text-right ${
-                          t.pnl == null
-                            ? "text-gray-500"
-                            : t.pnl >= 0
-                            ? "text-emerald-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {t.pnl == null ? "—" : fmtMoney(t.pnl)}
+                </thead>
+                <tbody>
+                  {result.trades.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                        체결된 거래가 없습니다.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    result.trades.map((t, i) => {
+                      const isExpanded = expandedId === i;
+                      const rationale = parseRationale(t.rationaleJson ?? null);
+                      const hasRationale = rationale !== null;
+                      return (
+                        <>
+                          <tr
+                            key={`row-${i}`}
+                            onClick={() =>
+                              hasRationale
+                                ? setExpandedId(isExpanded ? null : i)
+                                : undefined
+                            }
+                            className={`border-b border-white/5 last:border-0 ${
+                              hasRationale ? "cursor-pointer hover:bg-white/5" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-2 text-gray-300">{t.datetime}</td>
+                            <td className="px-4 py-2 text-white">
+                              {t.companyName ? `${t.companyName} (${t.symbol})` : t.symbol}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span
+                                className={
+                                  t.side === "BUY" ? "text-emerald-400" : "text-red-400"
+                                }
+                              >
+                                {t.side === "BUY" ? "매수" : "매도"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-right text-gray-300">{t.qty}</td>
+                            <td className="px-4 py-2 text-right text-gray-300">
+                              {t.price.toLocaleString("ko-KR")}
+                            </td>
+                            <td
+                              className={`px-4 py-2 text-right ${
+                                t.pnl == null
+                                  ? "text-gray-500"
+                                  : t.pnl >= 0
+                                  ? "text-emerald-400"
+                                  : "text-red-400"
+                              }`}
+                            >
+                              {t.pnl == null ? "—" : fmtMoney(t.pnl)}
+                            </td>
+                            <td className="px-4 py-2 text-right text-gray-400 text-xs">
+                              {hasRationale ? (isExpanded ? "▲" : "▼") : ""}
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr key={`rationale-${i}`} className="bg-gray-800/40">
+                              <td colSpan={7} className="px-6 py-3">
+                                <TradeRationaleRow rationale={rationale} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : null}
