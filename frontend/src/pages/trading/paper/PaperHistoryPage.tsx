@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPaperHistory } from "@/lib/paperApi";
 import type { PaperTradeHistoryItem } from "@/types/paper";
 import { TradeRationaleRow, parseRationale } from "@/components/trading/TradeRationaleRow";
+import { CandleSection } from "@/components/backtest/CandleSection";
+import type { BacktestTrade } from "@/types/trading";
 
 export function PaperHistoryPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<{ symbol: string; date: string; time: number } | null>(null);
 
   const { data, isLoading, isError } = useQuery<PaperTradeHistoryItem[]>({
     queryKey: ["trading", "paper", "history"],
@@ -15,6 +18,20 @@ export function PaperHistoryPage() {
     },
     refetchInterval: 30000,
   });
+
+  // Auto-select first trade when data loads (locked §1)
+  useEffect(() => {
+    if (data && data.length > 0 && !selected) {
+      const t: PaperTradeHistoryItem = data[0]!;
+      setSelected({
+        symbol: t.symbol,
+        date: t.tradedAt.slice(0, 10),
+        time: Math.floor(new Date(t.tradedAt).getTime() / 1000),
+      });
+    }
+    // Only run when data changes (not selected — intentional single-trigger on load)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -44,6 +61,29 @@ export function PaperHistoryPage() {
         </div>
       ) : (
         <>
+          {/* Map PaperTradeHistoryItem[] → BacktestTrade[] shape for CandleSection markers */}
+          {(() => {
+            const candleTrades: BacktestTrade[] = data.map((t) => ({
+              datetime: t.tradedAt,
+              symbol: t.symbol,
+              companyName: null,
+              side: t.side,
+              qty: t.qty,
+              price: t.price,
+              pnl: t.pnl,
+              rationaleJson: t.rationaleJson ?? null,
+            }));
+            return (
+              <CandleSection
+                symbol={selected?.symbol ?? null}
+                date={selected?.date ?? null}
+                trades={candleTrades}
+                indicators={[]}
+                highlightTime={selected?.time}
+              />
+            );
+          })()}
+
           <p className="text-xs text-gray-500">행을 클릭하면 매매 근거를 확인할 수 있습니다.</p>
           <div className="rounded-lg border border-white/10 bg-gray-900/50 overflow-x-auto">
             <table className="w-full text-sm">
@@ -63,18 +103,24 @@ export function PaperHistoryPage() {
                   const isExpanded = expandedId === t.id;
                   const rationale = parseRationale(t.rationaleJson ?? null);
                   const hasRationale = rationale !== null;
+                  const handleRowClick = () => {
+                    // Always load chart for this trade (RESEARCH Pattern 7)
+                    setSelected({
+                      symbol: t.symbol,
+                      date: t.tradedAt.slice(0, 10),
+                      time: Math.floor(new Date(t.tradedAt).getTime() / 1000),
+                    });
+                    // Toggle accordion only when rationale is available
+                    if (hasRationale) {
+                      setExpandedId(isExpanded ? null : t.id);
+                    }
+                  };
                   return (
                     <>
                       <tr
                         key={`row-${t.id}`}
-                        onClick={() =>
-                          hasRationale
-                            ? setExpandedId(isExpanded ? null : t.id)
-                            : undefined
-                        }
-                        className={`border-b border-white/5 ${
-                          hasRationale ? "cursor-pointer hover:bg-white/5" : ""
-                        }`}
+                        onClick={handleRowClick}
+                        className="cursor-pointer border-b border-white/5 hover:bg-white/5"
                       >
                         <td className="px-4 py-3 text-gray-300">
                           {new Date(t.tradedAt).toLocaleString("ko-KR")}

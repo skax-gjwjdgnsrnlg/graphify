@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchPaperRules, runBacktest } from "@/lib/ruleApi";
 import { ApiRequestError } from "@/lib/apiClient";
-import type { BacktestResult } from "@/types/trading";
+import type { BacktestResult, BacktestTrade } from "@/types/trading";
 import { EquityCurveChart } from "@/components/backtest/EquityCurveChart";
+import { CandleSection } from "@/components/backtest/CandleSection";
+import { extractIndicators } from "@/components/backtest/candleIndicators";
 import { TradeRationaleRow, parseRationale } from "@/components/trading/TradeRationaleRow";
 
 const fmtMoney = (n: number) =>
@@ -22,6 +24,7 @@ export function PaperBacktestPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<{ symbol: string; date: string; time: number } | null>(null);
 
   const { data: rules } = useQuery({
     queryKey: ["trading", "paper", "rules"],
@@ -43,9 +46,21 @@ export function PaperBacktestPage() {
       });
     },
     onSuccess: (res) => {
-      setResult(res.data ?? null);
+      const nextResult = res.data ?? null;
+      setResult(nextResult);
       setExpandedId(null);
       setError(null);
+      // Auto-select first trade (locked §1)
+      if (nextResult && nextResult.trades.length > 0) {
+        const t: BacktestTrade = nextResult.trades[0]!;
+        setSelected({
+          symbol: t.symbol,
+          date: t.datetime.slice(0, 10),
+          time: Math.floor(new Date(t.datetime).getTime() / 1000),
+        });
+      } else {
+        setSelected(null);
+      }
     },
     onError: (err) => {
       setResult(null);
@@ -166,6 +181,21 @@ export function PaperBacktestPage() {
             />
           </div>
 
+          {/* Candle chart section — below equity curve (SC-4) */}
+          {(() => {
+            const ruleDef = (rules ?? []).find((r) => r.id === ruleId)?.definition;
+            const indicators = ruleDef ? extractIndicators(ruleDef) : [];
+            return (
+              <CandleSection
+                symbol={selected?.symbol ?? null}
+                date={selected?.date ?? null}
+                trades={result.trades}
+                indicators={indicators}
+                highlightTime={selected?.time}
+              />
+            );
+          })()}
+
           {/* Advanced statistics — 3 cards */}
           <div>
             <h3 className="mb-3 text-sm font-medium text-gray-300">고급 통계</h3>
@@ -216,18 +246,24 @@ export function PaperBacktestPage() {
                       const isExpanded = expandedId === i;
                       const rationale = parseRationale(t.rationaleJson ?? null);
                       const hasRationale = rationale !== null;
+                      const handleRowClick = () => {
+                        // Always load chart for this trade (locked §1 + RESEARCH Pattern 7)
+                        setSelected({
+                          symbol: t.symbol,
+                          date: t.datetime.slice(0, 10),
+                          time: Math.floor(new Date(t.datetime).getTime() / 1000),
+                        });
+                        // Toggle accordion only when rationale is available
+                        if (hasRationale) {
+                          setExpandedId(isExpanded ? null : i);
+                        }
+                      };
                       return (
                         <>
                           <tr
                             key={`row-${i}`}
-                            onClick={() =>
-                              hasRationale
-                                ? setExpandedId(isExpanded ? null : i)
-                                : undefined
-                            }
-                            className={`border-b border-white/5 last:border-0 ${
-                              hasRationale ? "cursor-pointer hover:bg-white/5" : ""
-                            }`}
+                            onClick={handleRowClick}
+                            className="cursor-pointer border-b border-white/5 last:border-0 hover:bg-white/5"
                           >
                             <td className="px-4 py-2 text-gray-300">{t.datetime}</td>
                             <td className="px-4 py-2 text-white">
