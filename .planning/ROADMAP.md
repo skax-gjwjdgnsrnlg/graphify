@@ -154,11 +154,11 @@ Plans:
 **Plans**: 5 plans (3 waves)
 
 Plans:
-- [ ] 06.5-01-PLAN.md — 2축 상태 모델(V35) + PaperLifecycleService activate/start/stop 재구성 + RULE-08 전이 가드
-- [ ] 06.5-02-PLAN.md — RuleEvaluator EvalResult 리치 반환 타입 (조건별 값 + 청산 사유) [TDD]
-- [ ] 06.5-03-PLAN.md — 백테스트 엔진 근거 포착 + TradeDto rationaleJson 인라인 운반
-- [ ] 06.5-04-PLAN.md — 모의 근거 병합(LiveEvaluationService) + paper_trades↔signal_log JOIN + MON-05 PRICE_LIMIT_PENDING
-- [ ] 06.5-05-PLAN.md — 프론트 역할 분리(설정/운영) + TradeRationaleRow 아코디언(백테스트+모의)
+- [x] 06.5-01-PLAN.md — 2축 상태 모델(V35) + PaperLifecycleService activate/start/stop 재구성 + RULE-08 전이 가드
+- [x] 06.5-02-PLAN.md — RuleEvaluator EvalResult 리치 반환 타입 (조건별 값 + 청산 사유) [TDD]
+- [x] 06.5-03-PLAN.md — 백테스트 엔진 근거 포착 + TradeDto rationaleJson 인라인 운반
+- [x] 06.5-04-PLAN.md — 모의 근거 병합(LiveEvaluationService) + paper_trades↔signal_log JOIN + MON-05 PRICE_LIMIT_PENDING
+- [x] 06.5-05-PLAN.md — 프론트 역할 분리(설정/운영) + TradeRationaleRow 아코디언(백테스트+모의)
 
 ### Phase 6.6: 5분봉 캔들 차트 시각화 (INSERTED)
 **Goal**: 백테스트 결과 화면에서 기존 수익곡선 차트 아래에, 선택한 거래일의 5분봉 OHLCV를 캔들스틱 차트로 렌더링한다. x축은 세션 시작/종료 시간, y축은 가격이며, 룰이 진입/청산한 시점을 차트 위에 마커로 표시한다. 차트 라이브러리는 lightweight-charts(Apache 2.0)를 사용한다
