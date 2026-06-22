@@ -6,6 +6,73 @@
 
 ---
 
+## [v1.5.0] 실시간 거래량 상위 유니버스 (VolumeRankingProvider)
+
+> Status: 구현 완료 (Phase 6.7) · 2026-06-23
+> 의존: v1.4.0(모의투자 실행 엔진 + 역할 분리) 완료 위에 구축
+
+**Phase 6.7 전체 구현 요약:**
+
+volume_top_n 룰이 "그날(현재 시점까지 누적) 거래량 상위 종목"을 실시간으로 동적 선정한다.
+KRX MDC는 인증 장벽(HTTP 400 LOGOUT)으로 차단됨 → Yahoo 5분 분봉 누적 집계 fallback 채택.
+
+### 1. 컴포넌트 구조
+
+| 컴포넌트 | 역할 | Bean 이름 |
+|---------|------|-----------|
+| `VolumeRankingProvider` | 포트 인터페이스 — `topVolume(market, date, topN, excludeEtf)` | — |
+| `DbVolumeRankingAdapter` | 백테스트 impl — 완결 일봉(market_bars) JPQL, instrument_type='COMMON_STOCK' 필터 | `dbVolumeRankingAdapter` |
+| `YahooCumulativeVolumeAdapter` | 라이브 impl — Yahoo 5m 분봉 누적 GROUP BY SUM + COMMON_STOCK JOIN + 1분 TTL 캐시 | `yahooCumulativeVolumeAdapter` |
+| `VolumeRankRefresher` | 매 틱 volume_top_n 룰 재선정 — top-N ∪ 보유 포지션 → assignSymbols | — |
+
+### 2. 백테스트 ↔ 라이브 거래량 기준 차이 및 일관성 방침 (SC5)
+
+| 구분 | 백테스트 | 라이브 |
+|------|---------|-------|
+| **기준** | 해당 거래일 완결 일봉 거래량 (market_bars) | 당일 누적 인트라데이 거래량 (Yahoo 5m, KST 당일) |
+| **범위** | 전체 KOSPI 보통주 (instrument_type='COMMON_STOCK') | 전체 KOSPI 보통주 (instrument_type='COMMON_STOCK') |
+| **의미** | 완결된 하루치 거래량으로 해당일 전략 검증 | 당일 현재 시점까지 누적 — 장 중 실시간 반영 |
+| **ETF/ETN 제외** | instrument_type='COMMON_STOCK' DB 컬럼 (V36 마이그레이션) | instrument_type='COMMON_STOCK' DB 컬럼 (동일) |
+
+**일관성 방침: 차이를 수용·문서화, 백테스트 재정렬 안 함 (Deferred)**
+
+- 이유: 백테스트를 인트라데이 누적 스냅샷 기준으로 재정렬하면 V28 이전 데이터 부재 + 비용 과다. CONTEXT.md Deferred에 명시됨.
+- VolumeRankingProvider 인터페이스 Javadoc에 `@VolumeRankingSemantics` 의미 차이 주석 기재됨.
+- KRX 직접 연동(KRX_ID/PW 세션 로그인) 시 대체 어댑터를 동일 포트로 플러그인 가능.
+
+### 3. 라이브 재선정 동작 (SC3/SC4)
+
+- **매 틱 재선정 (SC3):** `LiveDataScheduler.collectLiveData()` → `VolumeRankRefresher.refreshIfVolumeTopN(today)` 호출 → `activeSymbolsUnion()` 직전에 paper_live_symbols 갱신.
+- **volume_top_n 룰만 대상 (Pitfall 3):** `universe.type == "volume_top_n"`인 RUNNING 룰만 재선정. symbols/watchlist 타입 룰의 종목 목록은 건드리지 않음.
+- **보유 포지션 종목 유지 (SC4, Pitfall 2):** 재선정 집합 = 새 top-N ∪ PaperPositionRepository 보유 종목. top-N에서 이탈했지만 보유 포지션 있는 종목은 paper_live_symbols에 계속 포함 → 수집 및 청산 평가 유지.
+- **진입/청산 분리:** 진입(BUY)은 현재 top-N 멤버에만 허용 (`LiveEvaluationService.buildEntrySet()` + `evaluateSymbol()` 게이팅). 청산(SELL)은 보유 종목 전체에 항상 평가 — entrySet 체크 없음.
+
+### 4. ETF/ETN 제외 구현 방식
+
+| 경로 | 방식 |
+|------|------|
+| 백테스트 (DbVolumeRankingAdapter) | JPQL `JOIN Company c ON c.ticker = b.symbol WHERE c.instrumentType = 'COMMON_STOCK'` |
+| 라이브 (YahooCumulativeVolumeAdapter) | JPQL `JOIN Company c ON c.ticker = m.symbol WHERE c.instrumentType = 'COMMON_STOCK'` |
+| V36 마이그레이션 | `ALTER TABLE companies ADD COLUMN IF NOT EXISTS instrument_type VARCHAR(20) NOT NULL DEFAULT 'COMMON_STOCK'` |
+
+### 5. 캐시 설계 (YahooCumulativeVolumeAdapter)
+
+- 1분 TTL 수동 캐시 (`volatile List<String> + Instant`) — Spring Cache 인프라 불필요.
+- 빈 fetch → 캐시 미갱신 (RESEARCH Pitfall 5 — stale-empty poisoning 방지). 다음 틱에 재시도.
+- 예외 발생 → stale 캐시 반환 (또는 초기값 빈 리스트). 예외를 상위로 전파하지 않음.
+
+### 6. 데이터 기준 차이 Deferred 항목
+
+| 항목 | 이유 | 향후 처리 |
+|------|------|----------|
+| KRX 직접 인트라데이 연동 | HTTP 400 LOGOUT (인증 필요) | KRX_ID/PW 환경변수 로그인 세션 구현 시 동일 포트 플러그인 |
+| 백테스트 거래량 기준 재정렬 | V28 이전 분봉 데이터 없음, 비용 과다 | 별도 Phase에서 분봉 히스토리 확보 후 검토 |
+| 라이브 KRX 랭킹 정확도 검증 | 장중에만 수동 확인 가능 | verify-work 게이트 시 장중 smoke test |
+
+**UI/UX: 해당 없음 — 백엔드 데이터 인프라 페이즈.**
+
+---
+
 ## [v1.4.0] 룰 설정/운영 역할 분리 & 매매 근거 (Role Split & Trade Rationale)
 
 > Status: 백엔드 완료 · 프론트엔드 완료 · 인수 육안 검증 대기 · 2026-06-22
