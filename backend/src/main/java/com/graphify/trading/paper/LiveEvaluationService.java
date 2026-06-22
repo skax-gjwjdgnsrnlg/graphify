@@ -1,8 +1,10 @@
 package com.graphify.trading.paper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.graphify.market.MarketBarIntraday;
 import com.graphify.market.MarketBarIntradayRepository;
+import com.graphify.trading.engine.EvalResult;
 import com.graphify.trading.engine.Indicators;
 import com.graphify.trading.engine.MarketDataPort;
 import com.graphify.trading.engine.RuleEvaluator;
@@ -160,19 +162,26 @@ public class LiveEvaluationService {
         // Indicator snapshot for signal log (MON-04)
         String indicatorJson = buildIndicatorSnapshot(closes, last, lastPrice);
 
-        // Position check → determine signal
+        // Position check → determine signal + capture EvalResult for rationale
         Optional<PaperPosition> posOpt = positionRepo.findByAccountIdAndSymbol(account.getId(), symbol);
 
         Signal signal;
+        String snapshotJson = indicatorJson; // default: plain snapshot (no rationale)
         if (posOpt.isPresent()) {
             // Already holding — check exit
             double entryPrice = posOpt.get().getAvgPrice().doubleValue();
-            boolean exit = ruleEvaluator.exitTriggered(def.exit(), closes, volumes, last, entryPrice);
-            signal = exit ? Signal.SELL : Signal.HOLD;
+            EvalResult exitResult = ruleEvaluator.evalExit(def.exit(), closes, volumes, last, entryPrice);
+            signal = exitResult.triggered() ? Signal.SELL : Signal.HOLD;
+            if (exitResult.triggered()) {
+                snapshotJson = mergeRationale(indicatorJson, exitResult, "SELL");
+            }
         } else {
             // No position — check entry
-            boolean entry = ruleEvaluator.entryTriggered(def.entry(), closes, volumes, last);
-            signal = entry ? Signal.BUY : Signal.HOLD;
+            EvalResult entryResult = ruleEvaluator.evalEntry(def.entry(), closes, volumes, last);
+            signal = entryResult.triggered() ? Signal.BUY : Signal.HOLD;
+            if (entryResult.triggered()) {
+                snapshotJson = mergeRationale(indicatorJson, entryResult, "BUY");
+            }
         }
 
         if (signal != Signal.HOLD) {
@@ -182,7 +191,40 @@ public class LiveEvaluationService {
                     rule.getId(), rule.getMode());
                 return;
             }
-            executor.execute(signal, rule, symbol, lastPrice, tickTime, indicatorJson);
+            executor.execute(signal, rule, symbol, lastPrice, tickTime, snapshotJson);
+        }
+    }
+
+    /**
+     * 기존 indicatorSnapshot JSON에 rationale 블록을 병합한다.
+     * 결과: {"price":..., "rsi14":..., "sma20":..., "rationale":{"side":..., "exitReason":..., "exitPct":..., "conditions":[...]}}
+     * Plan 03(백테스트)와 동일 스키마 (RULE-09 SC5).
+     */
+    String mergeRationale(String snapshotJson, EvalResult evalResult, String side) {
+        try {
+            ObjectNode root = snapshotJson != null
+                    ? (ObjectNode) objectMapper.readTree(snapshotJson)
+                    : objectMapper.createObjectNode();
+
+            ObjectNode rationale = objectMapper.createObjectNode();
+            rationale.put("side", side);
+            if (evalResult.exitReason() != null) {
+                rationale.put("exitReason", evalResult.exitReason().name());
+            } else {
+                rationale.putNull("exitReason");
+            }
+            if (evalResult.exitPct() != null) {
+                rationale.put("exitPct", evalResult.exitPct());
+            } else {
+                rationale.putNull("exitPct");
+            }
+            rationale.set("conditions", objectMapper.valueToTree(evalResult.conditions()));
+            root.set("rationale", rationale);
+
+            return objectMapper.writeValueAsString(root);
+        } catch (Exception e) {
+            log.warn("Failed to merge rationale into snapshot: {}", e.getMessage());
+            return snapshotJson;
         }
     }
 
