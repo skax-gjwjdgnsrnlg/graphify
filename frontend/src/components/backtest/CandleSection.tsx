@@ -2,23 +2,20 @@
  * CandleSection.tsx — self-contained candle chart section (reused by both pages).
  *
  * Wraps bars useQuery + 4-state shell + indicator computation + CandleChart mount.
- * 4 dark-themed inline states (NOT shared/ EmptyState/ErrorBanner — light-theme cream/charcoal
- * tokens would clash with dark gray-900 page backgrounds per RESEARCH Pitfall 7).
- *
- * Token mapping (standard Tailwind palette only, no custom hex):
- *   bg-gray-900/50, border-white/10, text-gray-500 — card/empty state
- *   border-red-500/30 bg-red-500/10 text-red-300    — error state
- *   border-white/20 border-t-emerald-500             — loading spinner
+ * The 4 states use shared/ primitives in their dark tone (EmptyState / ErrorBanner /
+ * SkeletonBlock with tone="dark"), so the section honors the shared-first rule while
+ * fitting the dark gray-900 page backgrounds. Colors come from the standard Tailwind
+ * palette via those primitives — no custom hex here.
  */
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBars } from "@/lib/ruleApi";
 import type { BacktestTrade } from "@/types/trading";
-import {
-  computeEMA,
-  computeSMA,
-} from "./candleIndicators";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { ErrorBanner } from "@/components/shared/ErrorBanner";
+import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
+import { computeEMA, computeSMA } from "./candleIndicators";
 import CandleChart from "./CandleChart";
 
 interface IndicatorSpec {
@@ -70,29 +67,27 @@ export function CandleSection({
     >
       <h3 className="mb-4 text-sm font-medium text-gray-300">5분봉 캔들 차트</h3>
 
-      {/* State: no selection */}
       {!symbol || !date ? (
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-white/10 bg-gray-900/50 text-sm text-gray-500">
-          표시할 거래가 없습니다.
-        </div>
+        /* State: no selection */
+        <EmptyState tone="dark" showHomeLink={false} title="표시할 거래가 없습니다." />
       ) : isLoading ? (
         /* State: loading */
-        <div className="flex h-[400px] items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-emerald-500" />
-        </div>
+        <SkeletonBlock tone="dark" className="h-[400px] w-full" />
       ) : isError ? (
         /* State: error */
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 px-6 text-center text-sm text-red-300">
-          캔들 데이터를 불러오지 못했습니다.{" "}
-          <button onClick={() => void refetch()} className="ml-1 underline">
-            재시도
-          </button>
-        </div>
+        <ErrorBanner
+          tone="dark"
+          message="캔들 데이터를 불러오지 못했습니다."
+          retryLabel="재시도"
+          onRetry={() => void refetch()}
+        />
       ) : bars.length === 0 ? (
         /* State: success but empty */
-        <div className="flex h-[400px] items-center justify-center rounded-lg border border-white/10 bg-gray-900/50 text-sm text-gray-500">
-          해당 일자의 5분봉 데이터가 없습니다.
-        </div>
+        <EmptyState
+          tone="dark"
+          showHomeLink={false}
+          title="해당 일자의 5분봉 데이터가 없습니다."
+        />
       ) : (
         /* State: success */
         <div data-testid="candle-chart">
