@@ -68,7 +68,9 @@ function PositionsTable({ positions }: { positions: PaperPositionItem[] }) {
               key={pos.symbol}
               className="border-b border-gray-700/50 last:border-0"
             >
-              <td className="py-2 pr-4 font-medium text-white">{pos.symbol}</td>
+              <td className="py-2 pr-4 font-medium text-white">
+                {pos.companyName ? `${pos.companyName} (${pos.symbol})` : pos.symbol}
+              </td>
               <td className="py-2 pr-4 text-right text-gray-300">
                 {pos.qty.toLocaleString("ko-KR")}
               </td>

@@ -121,7 +121,8 @@ public class UserProfileService {
                 authProvider,
                 user.isPremium(),
                 customPrompt,
-                user.isTradingEnabled()
+                user.isTradingEnabled(),
+                user.getTradingMode()
         );
     }
 

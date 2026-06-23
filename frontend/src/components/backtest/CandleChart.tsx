@@ -19,6 +19,7 @@ import {
   ColorType,
   HistogramSeries,
   LineSeries,
+  LineStyle,
   createChart,
   createSeriesMarkers,
 } from "lightweight-charts";
@@ -38,6 +39,9 @@ interface CandleChartProps {
     label: string;
     data: Array<{ time: number; value: number }>;
   }>;
+  // RSI series for the bottom subchart pane (#4 — shown when the clicked trade's
+  // rationale is RSI-based). null/undefined → no RSI pane.
+  rsiLine?: { label: string; data: Array<{ time: number; value: number }> } | null;
   highlightTime?: number; // epoch-seconds of the clicked trade marker
   highlightSide?: "BUY" | "SELL"; // side of the clicked trade (disambiguates same-time BUY/SELL)
 }
@@ -47,6 +51,7 @@ export default function CandleChart({
   trades,
   filterDate,
   indicatorLines,
+  rsiLine,
   highlightTime,
   highlightSide,
 }: CandleChartProps) {
@@ -169,13 +174,69 @@ export default function CandleChart({
     }
 
     // -----------------------------------------------------------------------
-    // 6. Fit + scroll to highlighted trade
+    // 5.5 RSI subchart (bottom pane) — shown when the clicked trade is RSI-based (#4)
+    //     v5: addSeries(..., paneIndex) creates a separate pane. 30/70 guide lines.
     // -----------------------------------------------------------------------
-    chart.timeScale().fitContent();
+    if (rsiLine && rsiLine.data.length > 0) {
+      const rsiSeries = chart.addSeries(
+        LineSeries,
+        {
+          color: "#8b5cf6", // violet-500 (distinct from amber SMA/EMA overlays)
+          lineWidth: 1,
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+          title: rsiLine.label,
+        },
+        1 // paneIndex → bottom subchart
+      );
+      rsiSeries.setData(
+        rsiLine.data.map((pt) => ({
+          time: pt.time as unknown as import("lightweight-charts").Time,
+          value: pt.value,
+        }))
+      );
+      // Overbought/oversold reference lines
+      rsiSeries.createPriceLine({
+        price: 70,
+        color: "#ef4444", // red-500
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: "70",
+      });
+      rsiSeries.createPriceLine({
+        price: 30,
+        color: "#10b981", // emerald-500
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: "30",
+      });
+      const rsiPane = chart.panes()[1];
+      if (rsiPane) rsiPane.setHeight(120);
+    }
 
-    if (highlightTime) {
-      // Scroll so the highlighted marker is approximately in the center
-      chart.timeScale().scrollToRealTime();
+    // -----------------------------------------------------------------------
+    // 6. Viewport — center the clicked trade with surrounding context (#3)
+    // -----------------------------------------------------------------------
+    if (highlightTime != null && bars.length > 0) {
+      // nearest bar index to the clicked trade's time
+      let idx = 0;
+      let best = Infinity;
+      for (let i = 0; i < bars.length; i++) {
+        const d = Math.abs(bars[i]!.time - highlightTime);
+        if (d < best) {
+          best = d;
+          idx = i;
+        }
+      }
+      const span = 20; // bars shown on each side of the trade
+      chart.timeScale().setVisibleLogicalRange({
+        from: idx - span,
+        to: idx + span,
+      });
+    } else {
+      chart.timeScale().fitContent();
     }
 
     // -----------------------------------------------------------------------
@@ -184,9 +245,16 @@ export default function CandleChart({
     return () => {
       chart.remove();
     };
-  }, [bars, trades, indicatorLines, highlightTime, highlightSide, filterDate]);
+  }, [bars, trades, indicatorLines, rsiLine, highlightTime, highlightSide, filterDate]);
 
   // Explicit height is required — lightweight-charts cannot infer height from 0px parent
   // (RESEARCH Pitfall 5). w-full + autoSize handles responsive width.
-  return <div ref={containerRef} className="w-full" style={{ height: 400 }} />;
+  // Taller when an RSI subchart pane is present so candles stay readable.
+  return (
+    <div
+      ref={containerRef}
+      className="w-full"
+      style={{ height: rsiLine && rsiLine.data.length > 0 ? 520 : 400 }}
+    />
+  );
 }

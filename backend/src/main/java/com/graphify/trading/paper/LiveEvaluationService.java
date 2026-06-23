@@ -49,7 +49,9 @@ public class LiveEvaluationService {
 
     private static final Logger log = LoggerFactory.getLogger(LiveEvaluationService.class);
     static final int  MIN_BARS_REQUIRED = 20;   // RSI-14 + SMA-20 계산 최소치
-    static final long STALENESS_MINUTES = 10L;
+    // Yahoo 5분봉(라이브 시세 소스)이 KRX 대비 ~15분 지연되므로 10분 임계는 장중 거의
+    // 모든 종목을 stale로 스킵시킨다. 지연 마진을 확보해 25분으로 상향 (ISSUE-2).
+    static final long STALENESS_MINUTES = 25L;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
@@ -76,7 +78,7 @@ public class LiveEvaluationService {
             PaperEquitySnapshotRepository snapshotRepo,
             ObjectMapper objectMapper,
             PaperLiveSymbolRepository paperLiveSymbolRepository,
-            @Qualifier("yahooCumulativeVolumeAdapter") VolumeRankingProvider liveRanking) {
+            @Qualifier("naverTradingValueRankingAdapter") VolumeRankingProvider liveRanking) {
         this.ruleRepo                  = ruleRepo;
         this.marketDataPort            = marketDataPort;
         this.intradayRepo              = intradayRepo;

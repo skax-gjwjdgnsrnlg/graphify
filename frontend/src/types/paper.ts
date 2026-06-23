@@ -1,5 +1,6 @@
 export interface PaperPositionItem {
   symbol: string;
+  companyName: string | null;
   qty: number;
   avgPrice: number;
   markPrice: number;
@@ -43,6 +44,7 @@ export interface PaperTradeHistoryItem {
   id: number;
   tradedAt: string;
   symbol: string;
+  companyName: string | null;
   side: "BUY" | "SELL";
   qty: number;
   price: number;

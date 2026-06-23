@@ -6,6 +6,85 @@
 
 ---
 
+## [v1.5.3] 룰 중지 미반영 회귀 수정 + 백테스트 차트 근거 표시
+
+> Status: 구현 완료 · 2026-06-24
+> 계기: 사용자 UI 테스트에서 "중지 눌러도 실행 상태가 안 바뀜"(#2), 백테스트 차트 RSI pane 미표시(#3). Playwright로 재현·검증.
+
+### 1. BUG — 룰 중지가 DB에 반영되지 않음 (v1.5.1 BUG-1 수정의 회귀)
+
+- **증상:** `/stop`이 HTTP 200 + 응답 runStatus=STOPPED를 반환하지만 DB는 RUNNING 잔류 → UI 배지·버튼이 안 바뀜. 직접 API 호출도 자기 GET이 RUNNING.
+- **근인:** v1.5.1에서 `PaperLiveSymbolRepository.deleteByRuleId`에 붙인 `@Modifying(clearAutomatically = true)`. `PaperLifecycleService.stop()`은 `rule.setRunStatus("STOPPED")` → `ruleRepo.save()`(아직 flush 안 됨) → `paperLiveSymbolService.deactivateRule()`(벌크 삭제) 순서로 한 트랜잭션에서 실행되는데, **`clearAutomatically=true`가 영속성 컨텍스트를 비우며 아직 flush되지 않은 run_status UPDATE를 폐기** → 커밋되지 않음.
+- **수정:** `@Modifying(flushAutomatically = true, clearAutomatically = true)`. 벌크 삭제 직전에 dirty 변경(run_status)을 먼저 flush해 폐기되지 않게 함. assignSymbols(BUG-1)는 삭제가 인서트보다 먼저라 영향 없음.
+- **검증:** Playwright로 rules-lifecycle 화면에서 중지 클릭 → 배지 "실행 중"→"중지됨", 버튼 "중지"→"시작", DB run_status=STOPPED 확인. VolumeRankRefresher/History 테스트 그린.
+
+### 2. 백테스트 차트 — 매매 근거 지표 표시 보강 (#3/#4 후속)
+
+- **RSI pane 미표시 근인:** 백테스트 `buildRationale`는 `conditions`를 최상위에, 라이브 이력 `mergeRationale`는 `rationale.conditions`로 감싼다. 프론트 `indicatorsFromRationale`가 후자만 파싱해 백테스트에선 RSI를 못 찾았다. → 두 구조 모두 파싱하도록 수정.
+- **근거 가독성:** 거래 클릭 시 차트 위에 **근거 패널** 추가 — 저장된 실제 지표값을 명시(예: `RSI(14) < 30 (실제 RSI(14) = 18.3) ✓`). 라이브 이력의 RSI 선(프론트 재계산)이 체결 당시 값과 다를 수 있어, 저장값을 진실로 표시.
+
+---
+
+## [v1.5.2] 시장 전체 장중 거래대금 랭킹 소스 전환 (Naver 모바일 API)
+
+> Status: 구현 완료 · 2026-06-23
+> 계기: 기존 라이브 랭킹이 사전 적재 후보 풀(in_kospi200)에 묶여 "시장 전체에서 거래대금 상위를 그때그때 발굴"하지 못함. 시장 전체 장중 거래대금 소스로 전환.
+> 검증: 단위테스트 6개 green + 라이브 13:50 틱에서 Naver 거래대금 top-10 정확 선정(보유 포지션 union 포함 12종목), DB 후보 풀 밖 종목(LS ELECTRIC 등) 포함 확인.
+
+### 1. 문제
+
+`YahooCumulativeVolumeAdapter`는 `market_bars_intraday`(우리 DB)를 집계하는데, 그 테이블은 사전 플래그된 `in_kospi200` 후보만 적재됨 → 랭킹 탐색 공간이 후보 풀로 고정(dev 6종목). 시장 전체 발굴 불가 + 부트스트랩 의존성(광역 ingest 시드 필요).
+
+### 2. 소스: Naver 모바일 증권 JSON API
+
+- 엔드포인트: `GET m.stock.naver.com/api/stocks/marketValue/{market}?page=N&pageSize=100` (무인증, UTF-8 JSON).
+- 각 종목 응답에 **당일 누적 거래대금**(`accumulatedTradingValueRaw`, 원)·종목구분(`stockEndType` stock/etf)·`itemCode` 포함. **장중 갱신**(marketStatus=OPEN, localTradedAt 실시간).
+- marketValue(시총) 정렬이라 거래대금 전용 경로 비공개 → 전 종목 페이징(KOSPI ~2500=25페이지, MAX_PAGES=30 하드캡) 후 거래대금 DESC 재정렬.
+
+### 3. 구현
+
+| 컴포넌트 | 역할 |
+|---|---|
+| `NaverStockRankingClient` | marketValue 엔드포인트 페이징 조회 → `RankingRow(itemCode, name, tradingValue, etf)` 목록. 실패는 빈 리스트 흡수. |
+| `NaverTradingValueRankingAdapter` (`@Qualifier("naverTradingValueRankingAdapter")`) | ETF 제외 → 거래대금 DESC → topN. 시장별 1분 TTL 캐시, 빈 응답 시 stale 캐시 유지. |
+| 배선 | `VolumeRankRefresher`·`LiveEvaluationService`의 `VolumeRankingProvider` 주입을 yahoo→naver 어댑터로 교체. |
+| 설정 | `graphify.market.naver-mobile-api-base-url`(기본 `https://m.stock.naver.com`) + `naverMobileRestClient` 빈. |
+
+### 4. 효과 및 잔여 과제
+
+- **효과:** 랭킹이 후보 풀에서 독립 → in_kospi200 사전 적재 불필요, 부트스트랩 의존성(ISSUE-3) 해소. 선정된 top-N만 `paper_live_symbols`에 저장(= 활성 룰의 거래 대상 기억). 사용자 의도 부합.
+- **잔여 과제:** ① 선정 종목이 `companies` 테이블에 없을 수 있음(예: LS ELECTRIC) → RSI 평가용 Yahoo 분봉 적재 시 종목마스터 커버리지 의존. 별도 종목마스터 동기화 필요. ② `stockEndType`은 우선주를 stock으로 분류(예: 삼성전자우 005935 미제외) → 보통주 한정 필요 시 호출측 필터 의존. ③ 기존 `YahooCumulativeVolumeAdapter` + in_kospi200 광역 ingest 경로는 미사용(fallback 빈으로 보존, 추후 정리 가능). ④ Naver 비공식 API — 약관/구조 변경 리스크, 모니터링 필요.
+
+---
+
+## [v1.5.1] 실시간 유니버스 라이브 테스트 후속 수정 (BUG-1 / 거래대금 / staleness)
+
+> Status: 구현 완료 · 2026-06-23
+> 계기: 2026-06-23 장중(KST) Phase 6.7 라이브 끝장 테스트에서 발견된 3개 이슈 수정.
+> 검증: 단위테스트 17개 green + 라이브 재기동 2틱 연속 재선정 성공(duplicate-key 0회) + 가상체결 1건 확인.
+
+### 1. BUG-1 — 매 틱 재선정 실패 (paper_live_symbols 유니버스 고정)
+
+- **증상:** 첫 배정 이후 매 틱 `VolumeRankRefresher.refreshOneRule`이 `uq_paper_live_symbols(rule_id,symbol)` 중복키로 throw → per-rule catch가 삼켜 `paper_live_symbols`가 첫 틱 집합에 고정. 신규 진입 종목 미수집/이탈 종목 미제거 → SC3("매 틱 재선정")·SC4(포지션 union 갱신)가 조용히 무효화.
+- **근인:** `PaperLiveSymbolService.assignSymbols`가 한 트랜잭션에서 `deleteByRuleId`(파생 삭제 → `em.remove` 큐잉) + `save`(insert)를 수행. Hibernate 액션 큐가 **insert를 delete보다 먼저 flush** → 기존 행과 충돌. 첫 배정(빈 테이블)만 우연히 성공.
+- **수정:** `PaperLiveSymbolRepository.deleteByRuleId`를 `@Modifying(clearAutomatically=true) @Query("DELETE FROM PaperLiveSymbol p WHERE p.ruleId = :ruleId")` 벌크 DML로 전환 → 호출 시점 DB 즉시 반영, 이후 insert와 무충돌.
+- **검증:** 재기동 후 비어있지 않은 테이블(6행)에 대해 10:50·10:55 두 틱 "Assigned 6 symbols" 성공, duplicate-key 0회.
+
+### 2. ISSUE-4 — 랭킹 기준: 거래량(주식 수) → 거래대금(거래량×종가)
+
+- **변경:** 유니버스 선정 정렬 기준을 순수 거래량에서 거래대금으로 통일(저가 대량거래주 왜곡 방지).
+  - 라이브: `MarketBarIntradayRepository.findCumulativeVolumeByMarketAndDate` → `ORDER BY SUM(m.volume * m.close) DESC`
+  - 백테스트: `MarketBarRepository.findTopVolumeByMarketOnDate`, `findTopVolumeSymbolsOnDate` → `ORDER BY (b.volume * b.close) DESC`
+- `YahooCumulativeVolumeAdapter` Javadoc/`@VolumeRankingSemantics` 주석도 거래대금 기준으로 갱신. → **아래 v1.5.0 §2 "거래량 기준" 서술은 본 항목으로 대체됨(거래대금 기준).** 백테스트(일봉)·라이브(분봉)의 분봉 vs 일봉 차이만 잔존.
+
+### 3. ISSUE-2 — staleness 임계 10분 → 25분
+
+- **근거:** 라이브 시세 소스인 Yahoo 5분봉이 KRX 대비 ~15분 지연 → 10분 임계로는 장중 거의 전 종목이 stale로 평가 스킵(실측 확인).
+- **수정:** `LiveEvaluationService.STALENESS_MINUTES`(평가 스킵 기준)·`LiveDataScheduler.STALENESS_MINUTES`(경고 기준) 둘 다 25L로 상향.
+- **남은 한계(미수정, 기록만):** ① 부트스트랩 의존성 — 스케줄러 단독으론 첫 틱 분봉 0→선정 0 정체, 별도 광역 `/internal/market/ingest` 시드 필요(운영 Cloud Scheduler 역할). ② dev DB의 `in_kospi200` 후보 6종목뿐 → 실 KOSPI200 적재 필요. ③ 근본적으로 Yahoo 지연 시세 → 향후 KRX 인증 연동/실시간 체결가 소스로 대체 검토.
+
+---
+
 ## [v1.5.0] 실시간 거래량 상위 유니버스 (VolumeRankingProvider)
 
 > Status: 구현 완료 (Phase 6.7) · 2026-06-23

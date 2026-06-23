@@ -2,12 +2,11 @@ package com.graphify.trading.backtest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.graphify.company.Company;
-import com.graphify.company.CompanyRepository;
 import com.graphify.company.market.IntradayBar;
 import com.graphify.company.market.YahooFinanceChartClient;
 import com.graphify.market.MarketBarIntraday;
 import com.graphify.market.MarketBarIntradayRepository;
+import com.graphify.market.SymbolNameService;
 import com.graphify.trading.backtest.dto.BacktestRequest;
 import com.graphify.trading.backtest.dto.BacktestResult;
 import com.graphify.trading.engine.EvalResult;
@@ -48,7 +47,7 @@ public class IntradayBacktestEngine {
     private final RuleEvaluator ruleEvaluator;
     private final FillSimulator fillSimulator;
     private final IntradayBarCacheService cacheService;
-    private final CompanyRepository companyRepository;
+    private final SymbolNameService symbolNameService;
     private final ObjectMapper objectMapper;
 
     public IntradayBacktestEngine(
@@ -57,7 +56,7 @@ public class IntradayBacktestEngine {
             RuleEvaluator ruleEvaluator,
             FillSimulator fillSimulator,
             IntradayBarCacheService cacheService,
-            CompanyRepository companyRepository,
+            SymbolNameService symbolNameService,
             ObjectMapper objectMapper
     ) {
         this.intradayRepository = intradayRepository;
@@ -65,7 +64,7 @@ public class IntradayBacktestEngine {
         this.ruleEvaluator = ruleEvaluator;
         this.fillSimulator = fillSimulator;
         this.cacheService = cacheService;
-        this.companyRepository = companyRepository;
+        this.symbolNameService = symbolNameService;
         this.objectMapper = objectMapper;
     }
 
@@ -132,7 +131,7 @@ public class IntradayBacktestEngine {
                         EvalResult exitResult = ruleEvaluator.evalExit(def.exit(), closes, volumes, i, entryPrice);
                         if (exitResult.triggered()) {
                             String rationaleJson = buildRationale(exitResult, "SELL");
-                            ledger.sell(date, symbol, closes[i], rationaleJson);
+                            ledger.sell(barDt, symbol, closes[i], rationaleJson);
                             lastExitIndex.put(symbol, gIdx);
                         }
                     } else {
@@ -144,7 +143,7 @@ public class IntradayBacktestEngine {
                             if (entryResult.triggered()) {
                                 String rationaleJson = buildRationale(entryResult, "BUY");
                                 double qty = sizeQty(def.sizing(), ledger.cash(), closes[i]);
-                                ledger.buy(date, symbol, qty, closes[i], rationaleJson);
+                                ledger.buy(barDt, symbol, qty, closes[i], rationaleJson);
                             }
                         }
                     }
@@ -238,19 +237,16 @@ public class IntradayBacktestEngine {
             }
         }
 
-        // Symbol → company name lookup (batch, one query per unique symbol)
-        Map<String, String> nameBySymbol = new HashMap<>();
-        for (PaperLedger.TradeRecord t : ledger.trades()) {
-            nameBySymbol.computeIfAbsent(t.symbol(), sym ->
-                companyRepository.findByTicker(sym).map(Company::getName).orElse(null));
-        }
+        // Symbol → 종목명 (companies → Naver 폴백, 고유 symbol만 1회)
+        Map<String, String> nameBySymbol = symbolNameService.resolveAll(
+                ledger.trades().stream().map(PaperLedger.TradeRecord::symbol).distinct().toList());
 
         // Trades
         int wins = 0;
         int sells = 0;
         List<BacktestResult.TradeDto> trades = new ArrayList<>();
         for (PaperLedger.TradeRecord t : ledger.trades()) {
-            LocalDateTime dt = t.date().atStartOfDay(); // date-only → use start of day
+            LocalDateTime dt = t.datetime(); // 5분봉 체결 시각 (KST wall-clock)
             trades.add(new BacktestResult.TradeDto(dt, t.symbol(), nameBySymbol.get(t.symbol()),
                     t.side(), t.qty(), t.price(), t.pnl(), t.rationaleJson()));
             if ("SELL".equals(t.side())) {

@@ -7,6 +7,7 @@ public record UserMeDto(
         String authProvider,
         boolean isPremium,
         String customPrompt,
-        boolean tradingEnabled
+        boolean tradingEnabled,
+        String tradingMode
 ) {
 }

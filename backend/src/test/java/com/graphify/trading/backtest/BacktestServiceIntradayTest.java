@@ -95,7 +95,7 @@ class BacktestServiceIntradayTest {
         FillSimulator fill = new FillSimulator();
         PaperLedger ledger = new PaperLedger(10_000_000.0, fill);
         LocalDate date = LocalDate.of(2026, 1, 2);
-        ledger.buy(date, "005930.KS", 10.0, 75000.0, rationaleJson);
+        ledger.buy(date.atStartOfDay(), "005930.KS", 10.0, 75000.0, rationaleJson);
 
         PaperLedger.TradeRecord record = ledger.trades().get(0);
         assertNotNull(record.rationaleJson(), "TradeRecord.rationaleJson must be non-null after buy()");
@@ -136,8 +136,8 @@ class BacktestServiceIntradayTest {
         PaperLedger ledger = new PaperLedger(10_000_000.0, fill);
         LocalDate date = LocalDate.of(2026, 1, 2);
         // Buy first so we can sell
-        ledger.buy(date, "005930.KS", 10.0, 70000.0, null);
-        ledger.sell(date, "005930.KS", 72000.0, rationaleJson);
+        ledger.buy(date.atStartOfDay(), "005930.KS", 10.0, 70000.0, null);
+        ledger.sell(date.atStartOfDay(), "005930.KS", 72000.0, rationaleJson);
 
         // Find the SELL record
         PaperLedger.TradeRecord sellRecord = ledger.trades().stream()
@@ -171,8 +171,8 @@ class BacktestServiceIntradayTest {
         FillSimulator fill = new FillSimulator();
         PaperLedger ledger = new PaperLedger(10_000_000.0, fill);
         LocalDate date = LocalDate.of(2026, 1, 2);
-        ledger.buy(date, "005930.KS", 10.0, 990.0, null);
-        ledger.sell(date, "005930.KS", 975.0, rationaleJson);
+        ledger.buy(date.atStartOfDay(), "005930.KS", 10.0, 990.0, null);
+        ledger.sell(date.atStartOfDay(), "005930.KS", 975.0, rationaleJson);
 
         PaperLedger.TradeRecord sellRecord = ledger.trades().stream()
                 .filter(r -> "SELL".equals(r.side()))

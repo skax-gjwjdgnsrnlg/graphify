@@ -13,6 +13,8 @@ public class GraphifyMarketProperties {
 
     private boolean naverEnabled = true;
     private String naverFinanceBaseUrl = "https://finance.naver.com";
+    /** Naver 모바일 증권 JSON API (시장 전체 장중 거래대금 랭킹) — finance.naver.com과 호스트가 다름 */
+    private String naverMobileApiBaseUrl = "https://m.stock.naver.com";
 
     private String krxApiKey = "";
     private String krxApiBaseUrl = "https://data-dbg.krx.co.kr/svc/apis/sto";
@@ -58,6 +60,14 @@ public class GraphifyMarketProperties {
 
     public void setNaverFinanceBaseUrl(String naverFinanceBaseUrl) {
         this.naverFinanceBaseUrl = naverFinanceBaseUrl;
+    }
+
+    public String getNaverMobileApiBaseUrl() {
+        return naverMobileApiBaseUrl;
+    }
+
+    public void setNaverMobileApiBaseUrl(String naverMobileApiBaseUrl) {
+        this.naverMobileApiBaseUrl = naverMobileApiBaseUrl;
     }
 
     public String getKrxApiKey() {

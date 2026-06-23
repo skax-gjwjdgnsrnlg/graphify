@@ -15,7 +15,15 @@ import type { BacktestTrade } from "@/types/trading";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
 import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
-import { computeEMA, computeSMA } from "./candleIndicators";
+import { parseRationale } from "@/components/trading/TradeRationaleRow";
+import {
+  computeEMA,
+  computeRSI,
+  computeSMA,
+  fmtTradeKst,
+  indicatorsFromRationale,
+  toEpochSec,
+} from "./candleIndicators";
 import CandleChart from "./CandleChart";
 
 interface IndicatorSpec {
@@ -51,16 +59,53 @@ export function CandleSection({
     enabled: !!symbol && !!date,
   });
 
+  // 클릭된 거래를 찾는다 (마커/근거/지표 공통 기준).
+  const selectedTrade = useMemo(() => {
+    if (highlightTime == null) return null;
+    return (
+      trades.find(
+        (t) =>
+          (!date || t.datetime.startsWith(date)) &&
+          toEpochSec(t.datetime) === highlightTime &&
+          (highlightSide == null || t.side === highlightSide)
+      ) ?? null
+    );
+  }, [trades, highlightTime, highlightSide, date]);
+
+  // 클릭된 거래의 매매 근거(rationale)에서 지표를 도출한다 (#4).
+  // 거래 선택 시: 그 거래 근거의 SMA/EMA는 오버레이, RSI는 하단 서브차트.
+  // 선택 없음: 룰 정의 기반 indicators(SMA/EMA 오버레이)로 폴백.
+  const { overlaySpecs, rsiPeriod } = useMemo(() => {
+    if (selectedTrade) {
+      const { overlays, rsiPeriods } = indicatorsFromRationale(selectedTrade.rationaleJson);
+      if (overlays.length || rsiPeriods.length) {
+        return { overlaySpecs: overlays, rsiPeriod: rsiPeriods[0] ?? null };
+      }
+    }
+    return { overlaySpecs: indicators, rsiPeriod: null as number | null };
+  }, [selectedTrade, indicators]);
+
+  // 선택된 거래의 매매 근거(저장된 실제 지표값) — 차트 위에 명시.
+  const selectedRationale = useMemo(
+    () => (selectedTrade ? parseRationale(selectedTrade.rationaleJson ?? null) : null),
+    [selectedTrade]
+  );
+
   const indicatorLines = useMemo(() => {
     if (!bars.length) return [];
-    return indicators.map(({ indicator, period }) => ({
+    return overlaySpecs.map(({ indicator, period }) => ({
       label: `${indicator}(${period})`,
       data:
         indicator === "SMA"
           ? computeSMA(bars, period)
           : computeEMA(bars, period),
     }));
-  }, [bars, indicators]);
+  }, [bars, overlaySpecs]);
+
+  const rsiLine = useMemo(() => {
+    if (!bars.length || rsiPeriod == null) return null;
+    return { label: `RSI(${rsiPeriod})`, data: computeRSI(bars, rsiPeriod) };
+  }, [bars, rsiPeriod]);
 
   return (
     <div
@@ -93,11 +138,53 @@ export function CandleSection({
       ) : (
         /* State: success */
         <div data-testid="candle-chart">
+          {selectedRationale && selectedTrade ? (
+            <div className="mb-3 rounded-md border border-white/10 bg-gray-800/40 p-3 text-xs">
+              <div className="mb-1.5 font-medium">
+                <span
+                  className={
+                    selectedTrade.side === "BUY" ? "text-emerald-400" : "text-red-400"
+                  }
+                >
+                  {selectedTrade.side === "BUY" ? "매수" : "매도"} 근거
+                </span>
+                <span className="ml-2 text-gray-400">
+                  {fmtTradeKst(selectedTrade.datetime)}
+                </span>
+              </div>
+              <ul className="space-y-0.5">
+                {selectedRationale.conditions.map((c, i) => (
+                  <li key={i} className="text-gray-300">
+                    {c.expr}
+                    {Number.isFinite(c.leftValue) ? (
+                      <span className="text-gray-400">
+                        {" "}
+                        (실제 {c.leftLabel} = {c.leftValue.toFixed(2)})
+                      </span>
+                    ) : null}
+                    <span className={c.passed ? "text-emerald-400" : "text-gray-500"}>
+                      {" "}
+                      {c.passed ? "✓" : "✗"}
+                    </span>
+                  </li>
+                ))}
+                {selectedRationale.exitReason ? (
+                  <li className="text-gray-400">
+                    청산 사유: {selectedRationale.exitReason}
+                    {selectedRationale.exitPct != null
+                      ? ` (${selectedRationale.exitPct.toFixed(1)}%)`
+                      : ""}
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          ) : null}
           <CandleChart
             bars={bars}
             trades={trades}
             filterDate={date}
             indicatorLines={indicatorLines}
+            rsiLine={rsiLine}
             highlightTime={highlightTime}
             highlightSide={highlightSide}
           />

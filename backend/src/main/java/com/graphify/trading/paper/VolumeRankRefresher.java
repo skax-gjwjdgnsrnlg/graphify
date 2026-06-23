@@ -43,7 +43,7 @@ public class VolumeRankRefresher {
             PaperLiveSymbolService paperLiveSymbolService,
             PaperAccountRepository accountRepo,
             PaperPositionRepository positionRepo,
-            @Qualifier("yahooCumulativeVolumeAdapter") VolumeRankingProvider liveRanking,
+            @Qualifier("naverTradingValueRankingAdapter") VolumeRankingProvider liveRanking,
             ObjectMapper objectMapper) {
         this.ruleRepo               = ruleRepo;
         this.paperLiveSymbolService = paperLiveSymbolService;

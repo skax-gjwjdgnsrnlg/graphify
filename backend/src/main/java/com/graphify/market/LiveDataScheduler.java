@@ -31,7 +31,9 @@ public class LiveDataScheduler {
     private static final Logger log = LoggerFactory.getLogger(LiveDataScheduler.class);
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final LocalTime MARKET_CLOSE = LocalTime.of(15, 30);
-    private static final long STALENESS_MINUTES = 10L;
+    // Yahoo 5분봉(라이브 시세 소스)이 KRX 대비 ~15분 지연되므로 경고 임계도 25분으로
+    // 맞춘다 (LiveEvaluationService.STALENESS_MINUTES와 동일, ISSUE-2).
+    private static final long STALENESS_MINUTES = 25L;
 
     private final KrxMarketCalendar calendar;
     private final PaperLiveSymbolService symbolService;
@@ -101,7 +103,7 @@ public class LiveDataScheduler {
     }
 
     /**
-     * 수집 후 최신 봉 타임스탬프 확인. 10분 이상 오래됐으면 WARNING (LIVE-04).
+     * 수집 후 최신 봉 타임스탬프 확인. STALENESS_MINUTES(25분) 이상 오래됐으면 WARNING (LIVE-04).
      * 경고 발생 시 해당 틱 평가는 Phase 3 평가 엔진이 staleness를 재확인하여 건너뜀.
      */
     private void checkStaleness(String symbol, Instant now) {

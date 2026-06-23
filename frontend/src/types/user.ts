@@ -1,5 +1,7 @@
 import type { AuthProvider } from "@/types/auth";
 
+export type TradingMode = "PAPER" | "LIVE";
+
 export interface UserMe {
   id: number;
   email: string;
@@ -8,6 +10,12 @@ export interface UserMe {
   isPremium: boolean;
   customPrompt: string | null;
   tradingEnabled: boolean;
+  tradingMode: TradingMode;
+}
+
+export interface TradingSettings {
+  tradingEnabled: boolean;
+  tradingMode: TradingMode;
 }
 
 export interface ChangePasswordRequest {

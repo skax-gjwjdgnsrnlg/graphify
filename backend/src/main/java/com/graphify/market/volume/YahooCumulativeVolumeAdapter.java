@@ -13,7 +13,7 @@ import java.time.ZoneId;
 import java.util.List;
 
 /**
- * 라이브 VolumeRankingProvider 구현체 — Yahoo Finance 5분봉 누적 거래량 기반 랭킹.
+ * 라이브 VolumeRankingProvider 구현체 — Yahoo Finance 5분봉 누적 거래대금(거래량×종가) 기반 랭킹.
  *
  * <p><b>배경:</b> KRX MDC getJsonData.cmd는 인증된 세션(KRX_ID/PW)이 필요하며
  * 무인증 호출 시 HTTP 400 "LOGOUT"을 반환한다 (06.7-01-SUMMARY 스파이크 확인).
@@ -25,17 +25,19 @@ import java.util.List;
  * <ol>
  *   <li>market_bars_intraday 테이블에서 당일 5분봉(interval='5m')을 symbol별 volume SUM 집계</li>
  *   <li>companies.instrument_type='COMMON_STOCK' JOIN 필터로 ETF/ETN/우선주/SPAC 제외 (V36 컬럼)</li>
- *   <li>SUM(volume) DESC 정렬 — 거래량 상위 N 반환</li>
+ *   <li>SUM(volume × close) DESC 정렬 — 거래대금 상위 N 반환</li>
  *   <li>~1분 TTL 수동 캐시로 매 틱 DB 재조회 방지</li>
  * </ol>
  * </p>
  *
  * <p><b>빈 선택:</b> {@link DbVolumeRankingAdapter}와 동시에 {@link VolumeRankingProvider} 구현.
  * 백테스트 엔진은 {@code @Qualifier("dbVolumeRankingAdapter")}로 명시 주입,
- * 라이브 서비스(Plan 03 VolumeRankRefresher)는 {@code @Qualifier("yahooCumulativeVolumeAdapter")}로 주입.</p>
+ * <b>현재 라이브 미사용(fallback):</b> v1.5.2에서 라이브 랭킹이
+ * {@code @Qualifier("naverTradingValueRankingAdapter")}(시장 전체 거래대금)로 전환됨.
+ * 본 어댑터는 후보 풀(in_kospi200) 기반 분봉 누적 방식으로, Naver 소스 장애 시 대체용으로만 보존.</p>
  *
- * <p><b>@VolumeRankingSemantics:</b> 라이브는 당일 누적 5분봉 거래량 기준.
- * 백테스트(DbVolumeRankingAdapter)는 완결 일봉 기준 — 의도적 차이, 문서화됨.</p>
+ * <p><b>@VolumeRankingSemantics:</b> 라이브는 당일 누적 5분봉 거래대금(거래량×종가) 기준.
+ * 백테스트(DbVolumeRankingAdapter)는 완결 일봉 거래대금 기준 — 분봉 vs 일봉 차이만 존재, 문서화됨.</p>
  */
 @Component("yahooCumulativeVolumeAdapter")
 public class YahooCumulativeVolumeAdapter implements VolumeRankingProvider {

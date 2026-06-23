@@ -68,7 +68,7 @@ export function PaperHistoryPage() {
             const candleTrades: BacktestTrade[] = data.map((t) => ({
               datetime: t.tradedAt,
               symbol: t.symbol,
-              companyName: null,
+              companyName: t.companyName ?? null,
               side: t.side,
               qty: t.qty,
               price: t.price,
@@ -129,7 +129,9 @@ export function PaperHistoryPage() {
                         <td className="px-4 py-3 text-gray-300">
                           {new Date(t.tradedAt).toLocaleString("ko-KR")}
                         </td>
-                        <td className="px-4 py-3 text-white font-medium">{t.symbol}</td>
+                        <td className="px-4 py-3 text-white font-medium">
+                          {t.companyName ? `${t.companyName} (${t.symbol})` : t.symbol}
+                        </td>
                         <td className="px-4 py-3">
                           {t.side === "BUY" ? (
                             <span className="text-emerald-400">매수</span>

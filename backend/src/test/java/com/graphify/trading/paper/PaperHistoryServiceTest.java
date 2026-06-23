@@ -1,9 +1,11 @@
 package com.graphify.trading.paper;
 
+import com.graphify.market.SymbolNameService;
 import com.graphify.trading.paper.dto.PaperTradeHistoryItem;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,7 @@ class PaperHistoryServiceTest {
     @Mock PaperAccountRepository    accountRepo;
     @Mock PaperTradeRepository      tradeRepo;
     @Mock PaperSignalLogRepository  signalLogRepo;
+    @Mock SymbolNameService         symbolNameService;
 
     PaperHistoryService service;
 
@@ -40,7 +43,8 @@ class PaperHistoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PaperHistoryService(accountRepo, tradeRepo, signalLogRepo);
+        service = new PaperHistoryService(accountRepo, tradeRepo, signalLogRepo, symbolNameService);
+        lenient().when(symbolNameService.resolveAll(any())).thenReturn(Map.of());
     }
 
     /** 계정 없음 → 빈 리스트 반환 */

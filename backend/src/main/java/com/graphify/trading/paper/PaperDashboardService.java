@@ -2,6 +2,7 @@ package com.graphify.trading.paper;
 
 import com.graphify.market.MarketBarIntraday;
 import com.graphify.market.MarketBarIntradayRepository;
+import com.graphify.market.SymbolNameService;
 import com.graphify.trading.paper.dto.PaperDashboardDto;
 import com.graphify.trading.paper.dto.PaperPositionItem;
 import com.graphify.trading.rule.TradingRuleRepository;
@@ -24,18 +25,21 @@ public class PaperDashboardService {
     private final PaperTradeRepository         tradeRepo;
     private final MarketBarIntradayRepository  intradayRepo;
     private final TradingRuleRepository        ruleRepo;
+    private final SymbolNameService            symbolNameService;
 
     public PaperDashboardService(
             PaperAccountRepository accountRepo,
             PaperPositionRepository positionRepo,
             PaperTradeRepository tradeRepo,
             MarketBarIntradayRepository intradayRepo,
-            TradingRuleRepository ruleRepo) {
+            TradingRuleRepository ruleRepo,
+            SymbolNameService symbolNameService) {
         this.accountRepo  = accountRepo;
         this.positionRepo = positionRepo;
         this.tradeRepo    = tradeRepo;
         this.intradayRepo = intradayRepo;
         this.ruleRepo     = ruleRepo;
+        this.symbolNameService = symbolNameService;
     }
 
     public PaperDashboardDto getDashboard(Long userId) {
@@ -81,7 +85,8 @@ public class PaperDashboardService {
         double costBasis     = qty * avgPrice;
         double unrealizedPnl = marketValue - costBasis;
         double unrealizedPnlPct = costBasis > 0 ? unrealizedPnl / costBasis * 100.0 : 0.0;
-        return new PaperPositionItem(pos.getSymbol(), qty, avgPrice, markPrice,
+        String companyName = symbolNameService.resolve(pos.getSymbol());
+        return new PaperPositionItem(pos.getSymbol(), companyName, qty, avgPrice, markPrice,
             marketValue, unrealizedPnl, unrealizedPnlPct);
     }
 

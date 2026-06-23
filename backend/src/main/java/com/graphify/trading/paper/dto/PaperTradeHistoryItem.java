@@ -6,6 +6,7 @@ public record PaperTradeHistoryItem(
         Long id,
         Instant tradedAt,
         String symbol,
+        String companyName,
         String side,
         double qty,
         double price,

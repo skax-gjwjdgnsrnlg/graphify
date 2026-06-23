@@ -127,6 +127,88 @@ export function computeEMA(
 }
 
 // ---------------------------------------------------------------------------
+// computeRSI
+// ---------------------------------------------------------------------------
+
+/**
+ * Simple (non-Wilder) RSI of close prices — mirrors Indicators.java rsi().
+ * RSI at index i uses the `period` diffs ending at i, so output starts at i=period.
+ */
+export function computeRSI(
+  bars: CandleBar[],
+  period: number
+): Array<{ time: number; value: number }> {
+  if (period <= 0 || bars.length <= period) return [];
+
+  const result: Array<{ time: number; value: number }> = [];
+  for (let i = period; i < bars.length; i++) {
+    let gain = 0;
+    let loss = 0;
+    for (let t = i - period + 1; t <= i; t++) {
+      const diff = bars[t]!.close - bars[t - 1]!.close;
+      if (diff >= 0) gain += diff;
+      else loss -= diff;
+    }
+    const avgGain = gain / period;
+    const avgLoss = loss / period;
+    let rsi: number;
+    if (avgLoss === 0) rsi = avgGain === 0 ? 50 : 100;
+    else rsi = 100 - 100 / (1 + avgGain / avgLoss);
+    result.push({ time: bars[i]!.time, value: rsi });
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// indicatorsFromRationale — derive indicators from a trade's rationale JSON
+// ---------------------------------------------------------------------------
+
+export interface RationaleIndicators {
+  overlays: IndicatorSpec[]; // SMA/EMA → main-chart line overlays
+  rsiPeriods: number[]; // RSI → bottom subchart pane
+}
+
+/**
+ * Parse a trade's rationaleJson and extract the indicators that drove the
+ * BUY/SELL decision. Condition labels look like "RSI(14)", "SMA(20)", "EMA(12)".
+ * SMA/EMA become overlays; RSI becomes a subchart. Unknown/PRICE/VOLUME ignored.
+ */
+export function indicatorsFromRationale(
+  rationaleJson: string | null | undefined
+): RationaleIndicators {
+  const overlays: IndicatorSpec[] = [];
+  const rsiPeriods: number[] = [];
+  const seen = new Set<string>();
+  if (!rationaleJson) return { overlays, rsiPeriods };
+
+  try {
+    const obj = JSON.parse(rationaleJson) as {
+      conditions?: Array<{ leftLabel?: string; rightLabel?: string }>;
+      rationale?: { conditions?: Array<{ leftLabel?: string; rightLabel?: string }> };
+    };
+    // 백테스트(buildRationale)는 conditions를 최상위에, 라이브 이력(mergeRationale)은
+    // rationale.conditions에 넣는다 — 두 구조 모두 지원.
+    const conditions = obj?.rationale?.conditions ?? obj?.conditions ?? [];
+    for (const cond of conditions) {
+      for (const label of [cond.leftLabel, cond.rightLabel]) {
+        const m = /^(RSI|SMA|EMA)\((\d+)\)/.exec(label ?? "");
+        if (!m) continue;
+        const indicator = m[1] as "RSI" | "SMA" | "EMA";
+        const period = parseInt(m[2]!, 10);
+        const key = `${indicator}-${period}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (indicator === "RSI") rsiPeriods.push(period);
+        else overlays.push({ indicator, period });
+      }
+    }
+  } catch {
+    // malformed rationale — return whatever parsed
+  }
+  return { overlays, rsiPeriods };
+}
+
+// ---------------------------------------------------------------------------
 // Time helpers (KST-aware)
 // ---------------------------------------------------------------------------
 

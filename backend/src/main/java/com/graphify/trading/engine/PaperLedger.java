@@ -1,6 +1,6 @@
 package com.graphify.trading.engine;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +16,7 @@ public class PaperLedger {
     }
 
     public record TradeRecord(
-            LocalDate date,
+            LocalDateTime datetime,
             String symbol,
             String side,
             double qty,
@@ -50,12 +50,12 @@ public class PaperLedger {
     }
 
     /** 매수: qty 주 체결(수수료 차감). 현금 부족 시 무시하고 false. */
-    public boolean buy(LocalDate date, String symbol, double qty, double referencePrice) {
-        return buy(date, symbol, qty, referencePrice, null);
+    public boolean buy(LocalDateTime datetime, String symbol, double qty, double referencePrice) {
+        return buy(datetime, symbol, qty, referencePrice, null);
     }
 
     /** 매수: qty 주 체결(수수료 차감). 현금 부족 시 무시하고 false. rationaleJson = 매수 근거 JSON. */
-    public boolean buy(LocalDate date, String symbol, double qty, double referencePrice, String rationaleJson) {
+    public boolean buy(LocalDateTime datetime, String symbol, double qty, double referencePrice, String rationaleJson) {
         if (qty <= 0) {
             return false;
         }
@@ -66,17 +66,17 @@ public class PaperLedger {
         }
         cash -= cost;
         positions.put(symbol, new Position(qty, price));
-        trades.add(new TradeRecord(date, symbol, "BUY", qty, price, null, rationaleJson));
+        trades.add(new TradeRecord(datetime, symbol, "BUY", qty, price, null, rationaleJson));
         return true;
     }
 
     /** 매도(전량 청산): 실현손익 기록. */
-    public boolean sell(LocalDate date, String symbol, double referencePrice) {
-        return sell(date, symbol, referencePrice, null);
+    public boolean sell(LocalDateTime datetime, String symbol, double referencePrice) {
+        return sell(datetime, symbol, referencePrice, null);
     }
 
     /** 매도(전량 청산): 실현손익 기록. rationaleJson = 청산 근거 JSON. */
-    public boolean sell(LocalDate date, String symbol, double referencePrice, String rationaleJson) {
+    public boolean sell(LocalDateTime datetime, String symbol, double referencePrice, String rationaleJson) {
         Position p = positions.get(symbol);
         if (p == null || p.qty() <= 0) {
             return false;
@@ -86,7 +86,7 @@ public class PaperLedger {
         double pnl = proceeds - p.avgPrice() * p.qty();
         cash += proceeds;
         positions.remove(symbol);
-        trades.add(new TradeRecord(date, symbol, "SELL", p.qty(), price, pnl, rationaleJson));
+        trades.add(new TradeRecord(datetime, symbol, "SELL", p.qty(), price, pnl, rationaleJson));
         return true;
     }
 

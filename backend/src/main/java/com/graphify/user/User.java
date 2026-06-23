@@ -42,6 +42,9 @@ public class User {
     @Column(name = "trading_enabled", nullable = false)
     private boolean tradingEnabled;
 
+    @Column(name = "trading_mode", nullable = false)
+    private String tradingMode = "PAPER";
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -122,5 +125,13 @@ public class User {
 
     public void setTradingEnabled(boolean tradingEnabled) {
         this.tradingEnabled = tradingEnabled;
+    }
+
+    public String getTradingMode() {
+        return tradingMode;
+    }
+
+    public void setTradingMode(String tradingMode) {
+        this.tradingMode = tradingMode;
     }
 }
