@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 6.8 IN PROGRESS — 06.8-01 완료 (Wave1 토대: trade primitives + TradingLayout shell + D3/D4/D8). 다음: 06.8-02/03/05 병렬.
-stopped_at: Completed 06.8-01-PLAN.md — trade primitive catalog + TradingLayout Binance shell + router IA
-last_updated: "2026-06-28T00:00:00.000Z"
-last_activity: "2026-06-28 — Phase 6.8 execute: 06.8-01 완료. 8 trade primitives (TradeButton/Badge/Card/StatCard/Table/PageState/Input/ModeIndicator) + TradingLayout 리빌드 (bg-trade-bg, D4 nav labels, TradeModeIndicator D8) + PaperTradingToggle segmented reskin + monitor ModeGuard LIVE→PAPER (D3). Build green, token guards clean."
+status: "execute-phase 진행 중 — 03 완료: CandleSection TradePageState swap + 4 PAPER data screens Binance reskin (D2 diff=0)."
+stopped_at: Completed 06.7-03-PLAN.md — Phase 6.7 전체 완료 (DATA-06 종결)
+last_updated: "2026-06-27T16:14:23.218Z"
+last_activity: "2026-06-28 — 06.8-03 execute: CandleSection + PaperDashboardPage + PaperHistoryPage + PaperReportPage + TradingMonitorPage"
 progress:
-  total_phases: 12
+  total_phases: 13
   completed_phases: 10
   total_plans: 39
-  completed_plans: 35
+  completed_plans: 37
   percent: 98
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 
 ## Current Position
 
-Phase: 6.8 (Trading 콘솔 UI 개편) — IN PROGRESS (Plan 1/5 완료)
-Plan: 06.8-01 완료 (Wave1 토대). 다음: 06.8-02(룰 클러스터) / 06.8-03(데이터 클러스터) / 06.8-05(공통+슬롯) 병렬, 06.8-04(백테스트) 마지막.
-Status: execute-phase 진행 중 — 01 완료: trade primitives 8종 + TradingLayout Binance shell (D3/D4/D8).
-Last activity: 2026-06-28 — 06.8-01 execute: trade primitive catalog + TradingLayout shell + PaperTradingToggle reskin + router D3 IA
+Phase: 6.8 (Trading 콘솔 UI 개편) — IN PROGRESS (Plan 4/5 완료: 01/02/03/05)
+Plan: 06.8-03 완료 (데이터 클러스터 reskin). 미실행: 06.8-04(백테스트).
+Status: execute-phase 진행 중 — 03 완료: CandleSection TradePageState swap + 4 PAPER data screens Binance reskin (D2 diff=0).
+Last activity: 2026-06-28 — 06.8-03 execute: CandleSection + PaperDashboardPage + PaperHistoryPage + PaperReportPage + TradingMonitorPage
 
 Progress: [██████████] 98% (Phase 6.7 완료 / Phase 6.8 PLANNED)
 
@@ -185,6 +185,8 @@ Recent decisions affecting current work:
 - [Phase 06.8, 06.8-01]: paperItems 라벨 "전략 설정"/"전략 운영" 통일 (D4); liveItems "전략 운영" (replaces "현재 룰"); "룰 수정" 엔트리 제거
 - [Phase 06.8, 06.8-01]: PaperTradingToggle segmented control 리스킨 (모의/실거래 버튼) — 기존 pill toggle 대체; LIVE 확인 CTA = bg-trade-primary (yellow, D8); applyMode/rollback 보존
 - [Phase 06.8, 06.8-01]: TradeModeIndicator 사이드바 헤더 하단 삽입 (D8); TradingLayout 루트 bg-trade-bg font-trade-sans
+- [Phase 06.8]: CandleSection state-swap: TradePageState(empty/loading/error) replaces shared/ EmptyState/SkeletonBlock/ErrorBanner — reuse pattern for 06.8-04 backtest
+- [Phase 06.8]: TradeTable wrapper + native <table> inside for history/monitor tables — preserves tr/td DOM for e2e candle-chart.spec.ts selectors
 
 ### Pending Todos
 
