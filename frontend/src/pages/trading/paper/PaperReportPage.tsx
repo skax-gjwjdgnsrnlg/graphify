@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPaperReport } from "@/lib/paperApi";
 import { EquityCurveChart } from "@/components/backtest/EquityCurveChart";
 import type { ReportData } from "@/types/paper";
+import { TradeCard, TradePageState, TradeStatCard } from "@/components/trading/ui";
 
 function fmtKst(iso: string | null): string {
   if (!iso) return "-";
@@ -25,21 +26,6 @@ function fmtNum(v: number, decimals = 2): string {
   });
 }
 
-interface StatCardProps {
-  label: string;
-  value: string;
-  valueClass?: string;
-}
-
-function StatCard({ label, value, valueClass = "text-white" }: StatCardProps) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-gray-900/50 p-4">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className={`mt-2 text-xl font-bold ${valueClass}`}>{value}</p>
-    </div>
-  );
-}
-
 export function PaperReportPage() {
   const { data, isLoading, isError } = useQuery<ReportData>({
     queryKey: ["trading", "paper", "report"],
@@ -51,18 +37,25 @@ export function PaperReportPage() {
 
   if (isLoading) {
     return (
-      <div>
-        <h2 className="text-xl font-semibold text-white">모의 성과 리포트</h2>
-        <p className="mt-2 text-sm text-gray-400">불러오는 중...</p>
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 성과 리포트
+        </h2>
+        <TradePageState variant="loading" className="h-[300px]" />
       </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <div>
-        <h2 className="text-xl font-semibold text-white">모의 성과 리포트</h2>
-        <p className="mt-2 text-sm text-red-400">데이터를 불러오지 못했습니다.</p>
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 성과 리포트
+        </h2>
+        <TradePageState
+          variant="error"
+          message="데이터를 불러오지 못했습니다."
+        />
       </div>
     );
   }
@@ -73,64 +66,65 @@ export function PaperReportPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-white">모의 성과 리포트</h2>
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 성과 리포트
+        </h2>
         {hasData && data.periodFrom && data.periodTo ? (
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-trade-muted font-trade-mono">
             {fmtKst(data.periodFrom)} ~ {fmtKst(data.periodTo)}
           </p>
         ) : (
-          <p className="mt-1 text-sm text-gray-400">최근 30일 기준</p>
+          <p className="mt-1 text-sm text-trade-muted font-trade-sans">최근 30일 기준</p>
         )}
       </div>
 
       {!hasData ? (
-        <div className="rounded-lg border border-white/10 bg-gray-900/50 p-8 text-center">
-          <p className="text-sm text-gray-400">
-            모의 실행 데이터가 없습니다. PAPER_LIVE 룰을 활성화하면 자동으로 기록됩니다.
-          </p>
-        </div>
+        <TradePageState
+          variant="empty"
+          message="모의 실행 데이터가 없습니다. PAPER_LIVE 룰을 활성화하면 자동으로 기록됩니다."
+        />
       ) : (
         <>
-          {/* Equity curve */}
-          <div className="rounded-lg border border-white/10 bg-gray-900/50 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-white">수익 곡선</h3>
+          {/* Equity curve — reused D2 chart on trade surface */}
+          <TradeCard title="수익 곡선">
             <EquityCurveChart
               data={data.equityCurve}
               drawdownSegments={[]}
               initialCash={initialCash}
             />
-          </div>
+          </TradeCard>
 
-          {/* Stat cards */}
+          {/* 6 metric stat cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <StatCard
+            <TradeStatCard
               label="총 수익률"
               value={fmtPct(data.totalReturn, true)}
-              valueClass={data.totalReturn >= 0 ? "text-emerald-400" : "text-red-400"}
+              valueColor={data.totalReturn >= 0 ? "up" : "down"}
             />
-            <StatCard
+            <TradeStatCard
               label="최대 낙폭 (MDD)"
               value={fmtPct(data.maxDrawdownPct)}
-              valueClass="text-red-400"
+              valueColor="down"
             />
-            <StatCard
+            <TradeStatCard
               label="승률"
               value={fmtPct(data.winRate)}
             />
-            <StatCard
+            <TradeStatCard
               label="총 거래"
               value={`${data.totalTrades}건`}
             />
-            <StatCard
+            <TradeStatCard
               label="Sharpe Ratio"
               value={fmtNum(data.sharpeRatio)}
-              valueClass={data.sharpeRatio >= 1 ? "text-emerald-400" : "text-white"}
+              valueColor={data.sharpeRatio >= 1 ? "up" : "neutral"}
             />
-            <StatCard
+            <TradeStatCard
               label="Sortino Ratio"
               value={fmtNum(data.sortinoRatio)}
-              valueClass={data.sortinoRatio >= 1 ? "text-emerald-400" : "text-white"}
+              valueColor={data.sortinoRatio >= 1 ? "up" : "neutral"}
             />
           </div>
         </>
