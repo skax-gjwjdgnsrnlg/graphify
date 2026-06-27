@@ -6,6 +6,39 @@
 
 ---
 
+## [v1.7.0] Trading 콘솔 UI 개편 — Binance 다크 테마 리스킨 (Phase 6.8)
+
+> Status: 구현 완료 · 2026-06-28 (Plans 01/02/05 완료 · 공통 스크린 + 슬롯 전체)
+> 계기: 기존 cream/emerald 혼용 UI를 Binance 다크 테마(trade-* 토큰)로 통일, 향후 Phase 7/8 LIVE 화면 골격 선제 확보.
+
+### 1. 변경 범위
+
+| 계층 | 대상 | 방향 |
+|------|------|------|
+| 토큰 | `tailwind.config.js` `trade-*` 네임스페이스 | 기존 cream 공용 — 신규 trading 전용 분리 |
+| 프리미티브 | `components/trading/ui/` 8종 | TradeButton/Badge/Card/StatCard/Table/PageState/Input/ModeIndicator |
+| 셸 | `TradingLayout.tsx` | bg-trade-bg, 사이드바 PAPER/LIVE nav, 세그먼트 토글 (D3/D4/D8) |
+| 공통 스크린 | TradingChatPage, TossSettingsPage | Binance 다크 리스킨 (mockup/handlers 보존, D5) |
+| LIVE 스텁 | TradingDashboardPage, TradingHistoryPage | 준비 중 플레이스홀더 + 서킷 브레이커 배너 슬롯 (D7) |
+| Phase 7/8 슬롯 | TradingDashboardPage 내부 | TV 배지·webhook URL·승격 게이트 — disabled 비기능 카드 |
+
+### 2. UI/UX
+
+- **화면 인벤토리:** DDS Agent 채팅(대기 중 dot · STATE chip · 버블 · 타임스탬프), 토스 설정(3-way badge: 미설정/유효/만료 + 저장·갱신 TradeButton), LIVE 대시보드(준비 중 chip · 서킷 브레이커 배너 슬롯 · Phase 7 TV 슬롯 · Phase 8 승격 게이트 슬롯), LIVE 거래 이력(준비 중 chip · dashed placeholder).
+- **shared 매핑:** TradingChat → 테마 textarea(자동 높이 보존), TradeButton primary 전송. 토스 설정 → TradeInput(mono, password), TradeCard, TradeBadge 3-way, TradeButton primary/secondary. LIVE stubs → TradeCard, TradeBadge, TradeButton(disabled).
+- **상태 전수:** DDS(대기 중/타이핑 중/응답 완료), 토스(미설정/유효/만료 + 로딩 확인 중…), LIVE 페이지(항상 준비 중 — 데이터 없음).
+- **키/접근성:** 채팅 Enter 전송 / Shift+Enter 줄바꿈, 전송 버튼 disabled(빈 입력·타이핑 중), 저장 disabled(ID/Secret 빈 값), 갱신 disabled(갱신 중).
+
+### 3. 핵심 결정
+
+- **D5 (mockup 보존):** DDS Agent setTimeout(1200ms) 유지 — 실 Agent API 연동은 Phase 7+ 범위.
+- **D6 (격리):** components/trading/ui/ — shared/ 비파괴; cream 앱 미영향.
+- **D7 (static-only stubs):** LIVE/Phase 7/8 슬롯 — 데이터 페칭·활성 액션 없음. 모든 Phase 8 버튼 disabled.
+- **D8 (mode indicator):** TradeModeIndicator 사이드바 헤더 하단, segmented 토글 확인 CTA = yellow TradeButton.
+- **토큰 규칙:** 모든 trading 화면에서 hardcoded hex 금지, `trade-*` 토큰 전용. CandleSection.tsx의 trade-* 사용(Phase 06.6 기원)은 사전 존재 조건 — Plan 05 미도입.
+
+---
+
 ## [v1.6.0] 운영 빈 DB 내성 — KOSPI200 마스터 시드 + 백테스트/모의 유니버스 폴백
 
 > Status: 구현 완료 · 2026-06-27 (backend `./gradlew test` 128 green, frontend `tsc -b && vite build` clean)

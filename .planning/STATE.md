@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "execute-phase 진행 중 — 03 완료: CandleSection TradePageState swap + 4 PAPER data screens Binance reskin (D2 diff=0)."
-stopped_at: Completed 06.8-02-PLAN.md — rule cluster reskin (TradingCompanyPickerModal + PaperRulesPage + TradingRulesPage + TradingRulesEditPage + TradeRationaleRow)
-last_updated: "2026-06-27T16:15:43.068Z"
-last_activity: "2026-06-28 — 06.8-03 execute: CandleSection + PaperDashboardPage + PaperHistoryPage + PaperReportPage + TradingMonitorPage"
+status: "Phase 6.8 IN PROGRESS — 06.8-01/02/03/05 완료. 06.8-04(백테스트) 미실행."
+stopped_at: Completed 06.8-05-PLAN.md — DDS Agent chat + 토스 설정 reskin + LIVE stub placeholders + Phase 7/8 disabled slots (D5/D7)
+last_updated: "2026-06-28T16:10:00.000Z"
+last_activity: "2026-06-28 — 06.8-05 execute: TradingChatPage Binance dark (setTimeout D5) + TossSettingsPage TradeBadge 3-way + TradingDashboardPage 서킷브레이커/Phase7/8 slots + TradingHistoryPage 준비중. Build green, token guards clean."
 progress:
   total_phases: 13
   completed_phases: 10
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-20)
 ## Current Position
 
 Phase: 6.8 (Trading 콘솔 UI 개편) — IN PROGRESS (Plan 4/5 완료: 01/02/03/05)
-Plan: 06.8-03 완료 (데이터 클러스터 reskin). 미실행: 06.8-04(백테스트).
-Status: execute-phase 진행 중 — 03 완료: CandleSection TradePageState swap + 4 PAPER data screens Binance reskin (D2 diff=0).
-Last activity: 2026-06-28 — 06.8-03 execute: CandleSection + PaperDashboardPage + PaperHistoryPage + PaperReportPage + TradingMonitorPage
+Plan: 06.8-05 완료 (공통 스크린 + LIVE/Phase7/8 슬롯). 미실행: 06.8-04(백테스트).
+Status: execute-phase 진행 중 — 05 완료: TradingChatPage + TossSettingsPage reskin (D5) + LIVE stubs + Phase 7 TV slot + Phase 8 승격 gate (D7).
+Last activity: 2026-06-28 — 06.8-05 execute: TradingChatPage + TossSettingsPage + TradingDashboardPage + TradingHistoryPage themed
 
 Progress: [██████████] 98% (Phase 6.7 완료 / Phase 6.8 PLANNED)
 
@@ -75,6 +75,7 @@ Progress: [██████████] 98% (Phase 6.7 완료 / Phase 6.8 PLA
 | Phase 06.7 P02 | 4m | 2 tasks | 3 files |
 | Phase 06.7 P03 | 8m | 3 tasks | 8 files |
 | Phase 06.8 P02 | 8m | 3 tasks | 5 files |
+| Phase 06.8 P05 | 3m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -189,6 +190,10 @@ Recent decisions affecting current work:
 - [Phase 06.8]: CandleSection state-swap: TradePageState(empty/loading/error) replaces shared/ EmptyState/SkeletonBlock/ErrorBanner — reuse pattern for 06.8-04 backtest
 - [Phase 06.8]: TradeTable wrapper + native <table> inside for history/monitor tables — preserves tr/td DOM for e2e candle-chart.spec.ts selectors
 - [Phase 06.8]: TradingCompanyPickerModal props byte-identical to shared/CompanyPickerModal — consumers swap import path only; shared/ untouched (D6)
+- [Phase 06.8, 06.8-05]: DDS Agent setTimeout(1200ms) mockup preserved (D5) — real Agent API wiring deferred to Phase 7+
+- [Phase 06.8, 06.8-05]: TossSettingsPage TradeBadge 3-way: 미설정=draft, 설정됨·유효=up, 설정됨·만료=down — save/refresh disabled conditions preserved
+- [Phase 06.8, 06.8-05]: LIVE/Phase7/8 stubs static-only (D7) — no useQuery/fetch/axios; all Phase 8 buttons disabled; 서킷 브레이커 배너 slot is placeholder text only
+- [Phase 06.8, 06.8-05]: Chat input uses themed textarea (not TradeInput) — TradeInput renders <input>, textarea needed for auto-height; trade tokens applied inline
 - [Phase 06.8]: 시작 button uses inline bg-trade-up rather than TradeButton variant — TradeButton has no green variant; avoids polluting primitive catalog
 
 ### Pending Todos
