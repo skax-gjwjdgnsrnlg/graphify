@@ -3,6 +3,14 @@ import { useState } from "react";
 import { fetchPaperDashboard } from "@/lib/paperApi";
 import { fetchTossAccounts, type TossAccount } from "@/lib/tossApi";
 import type { PaperPositionItem } from "@/types/paper";
+import {
+  TradeCard,
+  TradePageState,
+  TradeStatCard,
+  TradeTable,
+  TradeTableHeader,
+  TradeTableRow,
+} from "@/components/trading/ui";
 
 const fmtMoney = (n: number) =>
   n.toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "원";
@@ -10,90 +18,51 @@ const fmtMoney = (n: number) =>
 const fmtPct = (n: number) =>
   `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
-function PnlText({ value }: { value: number }) {
-  const color =
-    value > 0 ? "text-green-400" : value < 0 ? "text-red-400" : "text-gray-400";
-  return <span className={color}>{fmtMoney(value)}</span>;
-}
-
-function PnlPctText({ value }: { value: number }) {
-  const color =
-    value > 0 ? "text-green-400" : value < 0 ? "text-red-400" : "text-gray-400";
-  return <span className={color}>{fmtPct(value)}</span>;
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-lg bg-gray-800 p-4">
-      <p className="mb-1 text-xs text-gray-400">{label}</p>
-      <p className="text-xl font-bold text-white">{value}</p>
-      {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
-    </div>
-  );
+function pnlColor(value: number): "up" | "down" | "neutral" {
+  return value > 0 ? "up" : value < 0 ? "down" : "neutral";
 }
 
 function PositionsTable({ positions }: { positions: PaperPositionItem[] }) {
   if (positions.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-gray-500">
+      <p className="py-6 text-center text-sm text-trade-muted font-trade-sans">
         보유 포지션 없음
       </p>
     );
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-700 text-left text-xs text-gray-400">
-            <th className="pb-2 pr-4">종목</th>
-            <th className="pb-2 pr-4 text-right">수량</th>
-            <th className="pb-2 pr-4 text-right">평균단가</th>
-            <th className="pb-2 pr-4 text-right">현재가</th>
-            <th className="pb-2 pr-4 text-right">평가금액</th>
-            <th className="pb-2 pr-4 text-right">평가손익</th>
-            <th className="pb-2 text-right">손익률</th>
-          </tr>
-        </thead>
-        <tbody>
-          {positions.map((pos) => (
-            <tr
-              key={pos.symbol}
-              className="border-b border-gray-700/50 last:border-0"
-            >
-              <td className="py-2 pr-4 font-medium text-white">
-                {pos.companyName ? `${pos.companyName} (${pos.symbol})` : pos.symbol}
-              </td>
-              <td className="py-2 pr-4 text-right text-gray-300">
-                {pos.qty.toLocaleString("ko-KR")}
-              </td>
-              <td className="py-2 pr-4 text-right text-gray-300">
-                {fmtMoney(pos.avgPrice)}
-              </td>
-              <td className="py-2 pr-4 text-right text-gray-300">
-                {fmtMoney(pos.markPrice)}
-              </td>
-              <td className="py-2 pr-4 text-right text-gray-300">
-                {fmtMoney(pos.marketValue)}
-              </td>
-              <td className="py-2 pr-4 text-right">
-                <PnlText value={pos.unrealizedPnl} />
-              </td>
-              <td className="py-2 text-right">
-                <PnlPctText value={pos.unrealizedPnlPct} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <TradeTable>
+      <TradeTableHeader className="grid grid-cols-4 text-xs">
+        <span>종목</span>
+        <span className="text-right">수량</span>
+        <span className="text-right">평균단가</span>
+        <span className="text-right">평가손익</span>
+      </TradeTableHeader>
+      {positions.map((pos) => (
+        <TradeTableRow key={pos.symbol} className="grid grid-cols-4 items-center text-sm">
+          <span className="text-trade-body font-medium font-trade-sans">
+            {pos.companyName ? `${pos.companyName} (${pos.symbol})` : pos.symbol}
+          </span>
+          <span className="text-right text-trade-muted font-trade-mono">
+            {pos.qty.toLocaleString("ko-KR")}
+          </span>
+          <span className="text-right text-trade-muted font-trade-mono">
+            {fmtMoney(pos.avgPrice)}
+          </span>
+          <span
+            className={`text-right font-trade-mono ${
+              pos.unrealizedPnl > 0
+                ? "text-trade-up"
+                : pos.unrealizedPnl < 0
+                ? "text-trade-down"
+                : "text-trade-muted"
+            }`}
+          >
+            {fmtMoney(pos.unrealizedPnl)}
+          </span>
+        </TradeTableRow>
+      ))}
+    </TradeTable>
   );
 }
 
@@ -108,52 +77,56 @@ function TossBalanceSection() {
   const configured = accounts && accounts.length > 0;
 
   return (
-    <div className="rounded-lg bg-gray-800">
+    <div className="rounded-lg bg-trade-surface border border-trade-hairline">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-gray-300 hover:text-white"
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-trade-muted-strong hover:text-trade-body font-trade-sans"
       >
         <span>토스 실계좌 잔고</span>
-        <span className="text-xs text-gray-500">{open ? "▲" : "▼"}</span>
+        <span className="text-xs text-trade-muted">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div className="border-t border-white/10 px-4 py-3">
+        <div className="border-t border-trade-hairline px-4 py-3">
           {isLoading ? (
-            <p className="text-sm text-gray-500">불러오는 중...</p>
+            <p className="text-sm text-trade-muted font-trade-sans">불러오는 중...</p>
           ) : !configured ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-trade-muted font-trade-sans">
               토스증권 미연동 —{" "}
-              <a href="/trading/settings" className="underline hover:text-white">
+              <a href="/trading/settings" className="underline hover:text-trade-body">
                 토스 설정
               </a>
               에서 자격증명을 등록하세요.
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-gray-400">
-                  <th className="pb-2 pr-4">계좌번호</th>
-                  <th className="pb-2 pr-4">계좌명</th>
-                  <th className="pb-2 pr-4 text-right">잔고</th>
-                  <th className="pb-2 text-right">출금가능</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.map((acc) => (
-                  <tr key={acc.accountNumber} className="border-t border-white/5">
-                    <td className="py-2 pr-4 font-mono text-gray-300">{acc.accountNumber}</td>
-                    <td className="py-2 pr-4 text-gray-300">{acc.accountName}</td>
-                    <td className="py-2 pr-4 text-right text-white">
-                      {acc.balance.toLocaleString("ko-KR")}원
-                    </td>
-                    <td className="py-2 text-right text-gray-300">
-                      {acc.availableBalance.toLocaleString("ko-KR")}원
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-trade-muted">
+                    <th className="pb-2 pr-4 font-medium font-trade-sans">계좌번호</th>
+                    <th className="pb-2 pr-4 font-medium font-trade-sans">계좌명</th>
+                    <th className="pb-2 pr-4 text-right font-medium font-trade-sans">잔고</th>
+                    <th className="pb-2 text-right font-medium font-trade-sans">출금가능</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {accounts.map((acc) => (
+                    <tr key={acc.accountNumber} className="border-t border-trade-hairline">
+                      <td className="py-2 pr-4 font-trade-mono text-trade-muted">
+                        {acc.accountNumber}
+                      </td>
+                      <td className="py-2 pr-4 text-trade-body">{acc.accountName}</td>
+                      <td className="py-2 pr-4 text-right text-trade-on-dark font-trade-mono">
+                        {acc.balance.toLocaleString("ko-KR")}원
+                      </td>
+                      <td className="py-2 text-right text-trade-muted font-trade-mono">
+                        {acc.availableBalance.toLocaleString("ko-KR")}원
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -162,61 +135,78 @@ function TossBalanceSection() {
 }
 
 export function PaperDashboardPage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, dataUpdatedAt } = useQuery({
     queryKey: ["trading", "paper", "dashboard"],
     queryFn: async () => (await fetchPaperDashboard()).data ?? null,
     refetchInterval: 30_000,
   });
 
+  const lastUpdated =
+    dataUpdatedAt > 0
+      ? new Date(dataUpdatedAt).toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      : null;
+
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-lg bg-gray-800" />
-          ))}
-        </div>
-        <div className="h-40 rounded-lg bg-gray-800" />
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 대시보드
+        </h2>
+        <TradePageState variant="loading" className="h-[300px]" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="rounded-lg bg-gray-800 p-6 text-center text-sm text-gray-400">
-        대시보드 데이터를 불러올 수 없습니다.
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 대시보드
+        </h2>
+        <TradePageState
+          variant="error"
+          message="대시보드 데이터를 불러올 수 없습니다."
+        />
       </div>
     );
   }
 
+  const returnPct =
+    data.cash > 0 ? ((data.totalEquity - data.cash) / data.cash) * 100 : 0;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-white">모의 대시보드</h2>
-        <p className="mt-1 text-sm text-gray-400">30초마다 자동 갱신</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-trade-on-dark font-trade-sans">
+          모의 대시보드
+        </h2>
+        {lastUpdated && (
+          <p className="text-xs font-trade-mono text-trade-muted">
+            30초 자동 갱신 · {lastUpdated}
+          </p>
+        )}
       </div>
 
-      {/* Stat cards */}
+      {/* 4 stat cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
+        <TradeStatCard
           label="총 평가금액"
           value={fmtMoney(data.totalEquity)}
-          sub={
-            <PnlPctText
-              value={
-                data.cash > 0
-                  ? ((data.totalEquity - data.cash) / data.cash) * 100
-                  : 0
-              }
-            />
-          }
+          sub={fmtPct(returnPct)}
+          valueColor={pnlColor(returnPct)}
         />
-        <StatCard label="가용 현금" value={fmtMoney(data.cash)} />
-        <StatCard
+        <TradeStatCard label="가용 현금" value={fmtMoney(data.cash)} />
+        <TradeStatCard
           label="오늘 실현손익"
-          value={<PnlText value={data.todayRealizedPnl} />}
+          value={fmtMoney(data.todayRealizedPnl)}
+          valueColor={pnlColor(data.todayRealizedPnl)}
         />
-        <StatCard
+        <TradeStatCard
           label="활성 PAPER_LIVE 룰"
           value={`${data.activePaperLiveRuleCount}개`}
         />
@@ -224,17 +214,26 @@ export function PaperDashboardPage() {
 
       {/* Unrealized PnL summary */}
       {data.positions.length > 0 && (
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-trade-muted font-trade-sans">
           <span>미실현 손익 합계:</span>
-          <PnlText value={data.totalUnrealizedPnl} />
+          <span
+            className={`font-trade-mono ${
+              data.totalUnrealizedPnl > 0
+                ? "text-trade-up"
+                : data.totalUnrealizedPnl < 0
+                ? "text-trade-down"
+                : "text-trade-muted"
+            }`}
+          >
+            {fmtMoney(data.totalUnrealizedPnl)}
+          </span>
         </div>
       )}
 
       {/* Positions table */}
-      <div className="rounded-lg bg-gray-800 p-4">
-        <h3 className="mb-4 text-sm font-medium text-gray-300">보유 포지션</h3>
+      <TradeCard title="보유 포지션">
         <PositionsTable positions={data.positions} />
-      </div>
+      </TradeCard>
 
       {/* Toss real account balance (collapsible) */}
       <TossBalanceSection />

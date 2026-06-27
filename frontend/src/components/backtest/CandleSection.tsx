@@ -2,19 +2,15 @@
  * CandleSection.tsx — self-contained candle chart section (reused by both pages).
  *
  * Wraps bars useQuery + 4-state shell + indicator computation + CandleChart mount.
- * The 4 states use shared/ primitives in their dark tone (EmptyState / ErrorBanner /
- * SkeletonBlock with tone="dark"), so the section honors the shared-first rule while
- * fitting the dark gray-900 page backgrounds. Colors come from the standard Tailwind
- * palette via those primitives — no custom hex here.
+ * States (no-selection / loading / error / empty) use TradePageState (trade tokens,
+ * dark-theme compatible). Canvas and chart internals are untouched (D2 — diff = 0).
  */
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBars } from "@/lib/ruleApi";
 import type { BacktestTrade } from "@/types/trading";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { ErrorBanner } from "@/components/shared/ErrorBanner";
-import { SkeletonBlock } from "@/components/shared/SkeletonBlock";
+import { TradePageState } from "@/components/trading/ui";
 import { parseRationale } from "@/components/trading/TradeRationaleRow";
 import {
   computeEMA,
@@ -110,66 +106,61 @@ export function CandleSection({
   return (
     <div
       data-testid="candle-section"
-      className="rounded-lg border border-white/10 bg-gray-900/50 p-4"
+      className="rounded-lg border border-trade-hairline bg-trade-surface p-4"
     >
-      <h3 className="mb-4 text-sm font-medium text-gray-300">5분봉 캔들 차트</h3>
+      <h3 className="mb-4 text-sm font-medium text-trade-muted-strong font-trade-sans">5분봉 캔들 차트</h3>
 
       {!symbol || !date ? (
         /* State: no selection */
-        <EmptyState tone="dark" showHomeLink={false} title="표시할 거래가 없습니다." />
+        <TradePageState variant="empty" title="표시할 거래가 없습니다." />
       ) : isLoading ? (
         /* State: loading */
-        <SkeletonBlock tone="dark" className="h-[400px] w-full" />
+        <TradePageState variant="loading" className="h-[400px] w-full" />
       ) : isError ? (
         /* State: error */
-        <ErrorBanner
-          tone="dark"
+        <TradePageState
+          variant="error"
           message="캔들 데이터를 불러오지 못했습니다."
-          retryLabel="재시도"
           onRetry={() => void refetch()}
         />
       ) : bars.length === 0 ? (
         /* State: success but empty */
-        <EmptyState
-          tone="dark"
-          showHomeLink={false}
-          title="해당 일자의 5분봉 데이터가 없습니다."
-        />
+        <TradePageState variant="empty" title="해당 일자의 5분봉 데이터가 없습니다." />
       ) : (
         /* State: success */
         <div data-testid="candle-chart">
           {selectedRationale && selectedTrade ? (
-            <div className="mb-3 rounded-md border border-white/10 bg-gray-800/40 p-3 text-xs">
+            <div className="mb-3 rounded-md border border-trade-hairline bg-trade-elevated/40 p-3 text-xs">
               <div className="mb-1.5 font-medium">
                 <span
                   className={
-                    selectedTrade.side === "BUY" ? "text-emerald-400" : "text-red-400"
+                    selectedTrade.side === "BUY" ? "text-trade-up" : "text-trade-down"
                   }
                 >
                   {selectedTrade.side === "BUY" ? "매수" : "매도"} 근거
                 </span>
-                <span className="ml-2 text-gray-400">
+                <span className="ml-2 text-trade-muted">
                   {fmtTradeKst(selectedTrade.datetime)}
                 </span>
               </div>
               <ul className="space-y-0.5">
                 {selectedRationale.conditions.map((c, i) => (
-                  <li key={i} className="text-gray-300">
+                  <li key={i} className="text-trade-body">
                     {c.expr}
                     {Number.isFinite(c.leftValue) ? (
-                      <span className="text-gray-400">
+                      <span className="text-trade-muted">
                         {" "}
                         (실제 {c.leftLabel} = {c.leftValue.toFixed(2)})
                       </span>
                     ) : null}
-                    <span className={c.passed ? "text-emerald-400" : "text-gray-500"}>
+                    <span className={c.passed ? "text-trade-up" : "text-trade-muted"}>
                       {" "}
                       {c.passed ? "✓" : "✗"}
                     </span>
                   </li>
                 ))}
                 {selectedRationale.exitReason ? (
-                  <li className="text-gray-400">
+                  <li className="text-trade-muted">
                     청산 사유: {selectedRationale.exitReason}
                     {selectedRationale.exitPct != null
                       ? ` (${selectedRationale.exitPct.toFixed(1)}%)`
