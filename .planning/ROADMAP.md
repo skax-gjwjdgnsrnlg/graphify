@@ -20,6 +20,7 @@
 - [x] **Phase 6.5: 룰 설정/라이프사이클 역할 분리 & 매매 근거** (INSERTED) - 모의 룰 설정(DRAFT↔ACTIVE 관리)과 룰 라이프사이클(ACTIVE 중 PAPER_LIVE 적용 여부 + 시작/중지)의 역할을 분리하고, 백테스트·매매 이력에 매수/매도 근거(트리거 조건·지표값)를 표시한다 (completed 2026-06-22)
 - [x] **Phase 6.6: 5분봉 캔들 차트 시각화** (INSERTED) - lightweight-charts로 수익곡선 아래 5분봉 OHLCV 캔들 차트를 렌더링하고 진입/청산 시점을 마커로 표시한다 (completed 2026-06-22)
 - [x] **Phase 6.7: 실시간 거래량 상위 유니버스 (KRX 거래량 순위 연동)** (INSERTED) - volume_top_n 룰이 그날(현재까지 누적) 거래량 상위 종목을 실시간 동적 선정한다 (전체 KOSPI 보통주, ETF/ETN 제외, VolumeRankingProvider 포트; KRX auth-wall로 라이브 소스는 Yahoo 5분봉 누적 fallback) (completed 2026-06-23)
+- [ ] **Phase 6.8: Trading 콘솔 UI 개편 (Binance 테마 리스킨 + IA 재배치)** (INSERTED) - `/trading/**` 전 화면을 wireframe.html 기준 Binance 다크 트레이딩 테마로 리스킨하고 IA를 재배치한다. 백엔드·API·차트 엔진 불변(프론트 전용). tailwind에 `trade-*` 토큰 추가 완료, 화면 단위 상세 기획으로 빅뱅 통제. 상세: `phases/06.8-trading-ui-redesign/06.8-CONTEXT.md`
 - [ ] **Phase 7: TradingView webhook 연동** - 새 룰 타입(TRADINGVIEW)을 추가해 TradingView alert webhook을 비동기로 수신하고, JSON/LLM 파서로 매수/매도 신호를 해석하여 PAPER_LIVE 가상 체결에 활용한다. 사전 등록된 KOSPI 시총 상위 종목 풀에서 종목을 선택한다
 - [ ] **Phase 8: 실투자 주문 실행 & LIVE 승격** - LIVE 룰 평가에 따른 토스증권 실제 주문 발행, 시세 연동, 서킷 브레이커를 구현한다
 
@@ -194,6 +195,30 @@ Plans:
 - [x] 06.7-01-PLAN.md — VolumeRankingProvider 포트 + DbVolumeRankingAdapter + instrument_type 마이그레이션(V36) + KRX 접근 스파이크(auth-wall 확인) (W1)
 - [x] 06.7-02-PLAN.md — YahooCumulativeVolumeAdapter (라이브 5분봉 누적, 보통주 필터, 1분 TTL 캐시; KRX auth-wall fallback) (W2)
 - [x] 06.7-03-PLAN.md — 라이브 재선정(VolumeRankRefresher) + 진입 게이팅/청산 유지 + DESIGN.md 일관성 방침 (W3)
+
+### Phase 6.8: Trading 콘솔 UI 개편 (Binance 테마 리스킨 + IA 재배치) (INSERTED)
+**Goal**: `/trading/**` 전 화면을 `wireframe.html` 기준 Binance 다크 트레이딩 테마로 리스킨하고 IA를 재배치한다. 백엔드·REST·DTO·차트 엔진(EquityCurveChart·CandleSection)은 변경하지 않고, 레이아웃·테마·메뉴 구조·컴포넌트 정렬만 바꾼다. tailwind에 `trade-*` 토큰을 추가(완료)하고, `components/trading/ui/`에 trade 전용 프리미티브를 신설해 기존 `shared/`(cream)를 비파괴로 유지한다. 빅뱅이되 화면 단위 상세 기획(매핑표+상태 명세+시각 검증 게이트)으로 통제한다.
+**Depends on**: Phase 6.7 (현재 구현 전부)
+**Requirements**: UIX-01 (UI 개편 — 별도 기능 요구사항 없음, 동작 불변)
+**Inputs**: wireframe.html, DESIGN-binance.md, PRODUCT_MANIFEST.md, plan.md, 06.8-CONTEXT.md
+**Success Criteria** (what must be TRUE):
+  1. `/trading/**` 전 화면이 `trade-*` 토큰·폰트만 사용한다 (하드코딩 hex 0건), wireframe 레이아웃·구조와 일치한다
+  2. 기존 기능 전부 동작 불변 — 룰 CRUD·2축 상태(DRAFT↔ACTIVE / STOPPED↔RUNNING)·백테스트·30초 폴링·매매 근거·모달·모드 가드(ModeGuard)
+  3. 차트는 기존 `EquityCurveChart`·`CandleSection` 재사용, 다크 테마 surface로 정렬한다
+  4. 빈/로딩/에러/성공/disabled 상태가 wireframe 주석대로 구현된다
+  5. cream 앱 본체·기존 비-trading 라우트에 회귀가 없다
+  6. 동작 모니터링이 PAPER 그룹으로 귀속되고(D3), 메뉴 명칭이 "전략 설정/전략 운영"으로 통일된다(D4)
+  7. LIVE 화면·Phase 7/8 기능은 비활성 placeholder(coming-soon)로만 존재한다 (실구현 아님)
+**Decisions** (06.8-CONTEXT.md): D1 테마 격리 / D2 차트 재사용 / D3 모니터 PAPER 귀속 / D4 명칭 통일 / D5 DDS 리스킨만 / D6 trade 전용 프리미티브 / D7 미래 슬롯 placeholder / D8 모드 토글 위치 유지
+**Plans**: 5 plans (5 waves) — 01 토대(프리미티브+레이아웃 셸+라우터 IA) / 02 룰 클러스터 / 03 데이터 클러스터 / 04 백테스트 / 05 공통+미래 슬롯
+
+Plans:
+- [ ] 06.8-01-PLAN.md — trade 프리미티브 8종(components/trading/ui/) + TradingLayout 셸 리빌드(모드 인디케이터·세그먼트 토글) + PaperTradingToggle 리스킨 + 라우터 IA(D3 모니터→PAPER, D4 라벨) [W1]
+- [ ] 06.8-02-PLAN.md — 룰 클러스터: TradingCompanyPickerModal 신설 + 전략 설정(PaperRulesPage)·전략 운영(TradingRulesPage)·룰 빌더(TradingRulesEditPage 빌더/JSON)·TradeRationaleRow 리스킨 (2축 상태·GUARD·검증 보존) [W2]
+- [ ] 06.8-03-PLAN.md — 데이터 클러스터: 모의 대시보드·거래 이력·성과 리포트·동작 모니터링 + CandleSection 상태 리테마(차트 내부 불변, D2) (30초 폴링·근거·자동선택 보존) [W3]
+- [ ] 06.8-04-PLAN.md — 백테스트(PaperBacktestPage): 입력 폼·5지표·고급통계 + EquityCurve/Candle 재사용 + 거래 테이블·근거·빈 유니버스 폴백 [W4]
+- [ ] 06.8-05-PLAN.md — 공통(DDS Agent 리스킨·토스 설정) + 미래 슬롯(LIVE 스텁·서킷 브레이커 자리·Phase7/8 비활성 placeholder, D5/D7) [W5]
+
 
 ### Phase 7: TradingView webhook 연동
 **Goal**: TradingView를 외부 신호 소스로 연동한다. 새 룰 타입(TRADINGVIEW)을 추가해, TradingView alert가 호출하는 webhook을 비동기로 수신(3초 타임아웃 회피)하고, 페이로드를 JSON 우선·실패 시 LLM(Claude API) fallback으로 파싱해 매수/매도 신호를 해석한 뒤 PAPER_LIVE 가상 체결에 반영한다. 종목은 시스템에 사전 등록된 KOSPI 시총 상위 종목 풀에서 선택하며, TradingView alert 등록은 사용자가 수동으로 수행한다(공식 API 없음). 백테스트는 기존 CUSTOM 룰 엔진을 그대로 사용한다(TradingView Strategy Tester 결과는 fetch 불가)
