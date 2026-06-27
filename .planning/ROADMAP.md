@@ -215,7 +215,7 @@ Plans:
 Plans:
 - [x] 06.8-01-PLAN.md — trade 프리미티브 8종(components/trading/ui/) + TradingLayout 셸 리빌드(모드 인디케이터·세그먼트 토글) + PaperTradingToggle 리스킨 + 라우터 IA(D3 모니터→PAPER, D4 라벨) [W1] ✓ 2026-06-28
 - [x] 06.8-02-PLAN.md — 룰 클러스터: TradingCompanyPickerModal 신설 + 전략 설정(PaperRulesPage)·전략 운영(TradingRulesPage)·룰 빌더(TradingRulesEditPage 빌더/JSON)·TradeRationaleRow 리스킨 (2축 상태·GUARD·검증 보존) [W2] ✓ 2026-06-28
-- [ ] 06.8-03-PLAN.md — 데이터 클러스터: 모의 대시보드·거래 이력·성과 리포트·동작 모니터링 + CandleSection 상태 리테마(차트 내부 불변, D2) (30초 폴링·근거·자동선택 보존) [W3]
+- [x] 06.8-03-PLAN.md — 데이터 클러스터: 모의 대시보드·거래 이력·성과 리포트·동작 모니터링 + CandleSection 상태 리테마(차트 내부 불변, D2) (30초 폴링·근거·자동선택 보존) [W3] ✓ 2026-06-28
 - [ ] 06.8-04-PLAN.md — 백테스트(PaperBacktestPage): 입력 폼·5지표·고급통계 + EquityCurve/Candle 재사용 + 거래 테이블·근거·빈 유니버스 폴백 [W4]
 - [x] 06.8-05-PLAN.md — 공통(DDS Agent 리스킨·토스 설정) + 미래 슬롯(LIVE 스텁·서킷 브레이커 자리·Phase7/8 비활성 placeholder, D5/D7) [W5] ✓ 2026-06-28
 

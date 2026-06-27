@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: "execute-phase 진행 중 — 03 완료: CandleSection TradePageState swap + 4 PAPER data screens Binance reskin (D2 diff=0)."
-stopped_at: Completed 06.7-03-PLAN.md — Phase 6.7 전체 완료 (DATA-06 종결)
-last_updated: "2026-06-27T16:14:23.218Z"
+stopped_at: Completed 06.8-02-PLAN.md — rule cluster reskin (TradingCompanyPickerModal + PaperRulesPage + TradingRulesPage + TradingRulesEditPage + TradeRationaleRow)
+last_updated: "2026-06-27T16:15:43.068Z"
 last_activity: "2026-06-28 — 06.8-03 execute: CandleSection + PaperDashboardPage + PaperHistoryPage + PaperReportPage + TradingMonitorPage"
 progress:
   total_phases: 13
   completed_phases: 10
   total_plans: 39
-  completed_plans: 37
+  completed_plans: 38
   percent: 98
 ---
 
@@ -74,6 +74,7 @@ Progress: [██████████] 98% (Phase 6.7 완료 / Phase 6.8 PLA
 | Phase 06.6 P03 | 4m | 4 tasks | 4 files |
 | Phase 06.7 P02 | 4m | 2 tasks | 3 files |
 | Phase 06.7 P03 | 8m | 3 tasks | 8 files |
+| Phase 06.8 P02 | 8m | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,8 @@ Recent decisions affecting current work:
 - [Phase 06.8, 06.8-01]: TradeModeIndicator 사이드바 헤더 하단 삽입 (D8); TradingLayout 루트 bg-trade-bg font-trade-sans
 - [Phase 06.8]: CandleSection state-swap: TradePageState(empty/loading/error) replaces shared/ EmptyState/SkeletonBlock/ErrorBanner — reuse pattern for 06.8-04 backtest
 - [Phase 06.8]: TradeTable wrapper + native <table> inside for history/monitor tables — preserves tr/td DOM for e2e candle-chart.spec.ts selectors
+- [Phase 06.8]: TradingCompanyPickerModal props byte-identical to shared/CompanyPickerModal — consumers swap import path only; shared/ untouched (D6)
+- [Phase 06.8]: 시작 button uses inline bg-trade-up rather than TradeButton variant — TradeButton has no green variant; avoids polluting primitive catalog
 
 ### Pending Todos
 
@@ -200,6 +203,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-23T00:00:00Z
-Stopped at: Completed 06.7-03-PLAN.md — Phase 6.7 전체 완료 (DATA-06 종결)
+Last session: 2026-06-27T16:15:33.201Z
+Stopped at: Completed 06.8-02-PLAN.md — rule cluster reskin (TradingCompanyPickerModal + PaperRulesPage + TradingRulesPage + TradingRulesEditPage + TradeRationaleRow)
 Resume file: None
