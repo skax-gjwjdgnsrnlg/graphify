@@ -12,6 +12,7 @@ import type {
   RuleUpsertRequest,
   SizingType,
 } from "@/types/trading";
+import { TradeButton, TradePageState } from "@/components/trading/ui";
 
 // ─── Internal state types ────────────────────────────────────────────────────
 
@@ -214,10 +215,28 @@ function fromDefinition(def: RuleDefinition, name: string): BuilderState {
   };
 }
 
+// ─── Trade-themed class constants ────────────────────────────────────────────
+
+// Shared input style — bg-trade-surface, border-trade-hairline, trade-body text
+const INPUT_CLS =
+  "w-full rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm text-trade-body focus:outline-none focus:ring-2 focus:ring-trade-info/50";
+
+// Mono numeric inputs (익절/손절/cooldown values)
+const INPUT_MONO_CLS =
+  "w-full rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm font-trade-mono focus:outline-none focus:ring-2 focus:ring-trade-info/50";
+
+// Select element style (no TradeInput wrapper for selects)
+const SELECT_CLS =
+  "rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm text-trade-body focus:outline-none focus:ring-2 focus:ring-trade-info/50";
+
+// Section card
+const SECTION_CLS = "rounded-lg border border-trade-hairline bg-trade-surface p-5";
+
+// Section heading (① ② …)
+const HEADING_CLS = "mb-3 text-xs font-semibold uppercase tracking-wide text-trade-muted";
+
 // ─── Condition row sub-component ─────────────────────────────────────────────
 
-const INPUT_CLS =
-  "w-full rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50";
 interface ConditionRowProps {
   row: ConditionRowState;
   index: number;
@@ -233,7 +252,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
       <select
         value={row.leftIndicator}
         onChange={(e) => onChange({ leftIndicator: e.target.value as RuleIndicator | "" })}
-        className="rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className={SELECT_CLS}
       >
         <option value="">지표 선택</option>
         {INDICATORS.map((ind) => (
@@ -250,7 +269,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
           placeholder="기간"
           value={row.leftPeriod}
           onChange={(e) => onChange({ leftPeriod: e.target.value })}
-          className="w-20 rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className={`w-20 rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm font-trade-mono text-trade-body focus:outline-none focus:ring-2 focus:ring-trade-info/50`}
         />
       )}
 
@@ -258,7 +277,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
       <select
         value={row.op}
         onChange={(e) => onChange({ op: e.target.value as RuleOperator | "" })}
-        className="rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className={SELECT_CLS}
       >
         <option value="">조건 선택</option>
         {OPERATORS.map((op) => (
@@ -274,7 +293,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
         onChange={(e) =>
           onChange({ rightType: e.target.value as "value" | "indicator" })
         }
-        className="rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className={SELECT_CLS}
       >
         <option value="value">값</option>
         <option value="indicator">지표</option>
@@ -287,7 +306,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
           placeholder="값"
           value={row.rightValue}
           onChange={(e) => onChange({ rightValue: e.target.value })}
-          className="w-24 rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className={`w-24 rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm font-trade-mono text-trade-body focus:outline-none focus:ring-2 focus:ring-trade-info/50`}
         />
       ) : (
         <>
@@ -296,7 +315,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
             onChange={(e) =>
               onChange({ rightIndicator: e.target.value as RuleIndicator | "" })
             }
-            className="rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className={SELECT_CLS}
           >
             <option value="">지표 선택</option>
             {INDICATORS.map((ind) => (
@@ -311,7 +330,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
               placeholder="기간"
               value={row.rightPeriod}
               onChange={(e) => onChange({ rightPeriod: e.target.value })}
-              className="w-20 rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className={`w-20 rounded-md border border-trade-hairline bg-trade-surface px-3 py-2 text-sm font-trade-mono text-trade-body focus:outline-none focus:ring-2 focus:ring-trade-info/50`}
             />
           )}
         </>
@@ -322,7 +341,7 @@ function ConditionRow({ row, index: _index, canRemove, onChange, onRemove }: Con
         <button
           type="button"
           onClick={onRemove}
-          className="ml-1 rounded px-2 py-1 text-sm text-gray-400 hover:text-red-400"
+          className="ml-1 rounded px-2 py-1 text-sm text-trade-muted hover:text-trade-down"
           aria-label="조건 삭제"
         >
           ×
@@ -465,7 +484,7 @@ export function TradingRulesEditPage() {
   if (isEdit && isLoading) {
     return (
       <div className="mx-auto max-w-3xl p-4">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <TradePageState variant="loading" />
       </div>
     );
   }
@@ -474,31 +493,31 @@ export function TradingRulesEditPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-white">
-          {isEdit ? "룰 편집" : "새 룰"}
-        </h1>
+      {/* Header — wireframe line ~404: ← 돌아가기 + title side by side */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => navigate("/trading/paper/rules")}
-          className="rounded-md px-3 py-1.5 text-sm text-gray-400 hover:text-white"
+          className="text-sm text-trade-muted hover:text-trade-body"
         >
           ← 돌아가기
         </button>
+        <h1 className="text-xl font-semibold text-trade-on-dark">
+          {isEdit ? "룰 편집" : "새 룰"}
+        </h1>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-2 border-b border-white/10">
+      {/* Tab bar — segmented pill (wireframe lines ~405–408) */}
+      <div className="flex gap-1 rounded-lg bg-trade-surface p-1 w-max">
         {(["builder", "json"] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => (t === "json" ? switchToJson() : switchToBuilder())}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-md px-5 py-1.5 text-sm font-semibold transition-colors ${
               tab === t
-                ? "border-b-2 border-emerald-500 text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-trade-primary text-trade-ink"
+                : "text-trade-muted hover:text-trade-body"
             }`}
           >
             {t === "builder" ? "빌더" : "JSON"}
@@ -509,9 +528,9 @@ export function TradingRulesEditPage() {
       {/* ── Builder tab ── */}
       {tab === "builder" && (
         <div className="space-y-4">
-          {/* 1. 룰 이름 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-gray-300">룰 이름</h2>
+          {/* ① 룰 이름 — wireframe line ~410 */}
+          <section className={SECTION_CLS}>
+            <h2 className={HEADING_CLS}>① 룰 이름</h2>
             <input
               type="text"
               placeholder="예: KOSPI Top10 모멘텀 전략"
@@ -523,12 +542,12 @@ export function TradingRulesEditPage() {
             />
           </section>
 
-          {/* 2. 유니버스 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-gray-300">유니버스</h2>
+          {/* ② 유니버스 — wireframe lines ~411–415 */}
+          <section className={SECTION_CLS}>
+            <h2 className={HEADING_CLS}>② 유니버스</h2>
             <div className="mb-3 flex gap-4">
               {(["symbols", "volume_top_n"] as const).map((ut) => (
-                <label key={ut} className="flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+                <label key={ut} className="flex cursor-pointer items-center gap-2 text-sm text-trade-body">
                   <input
                     type="radio"
                     name="universeType"
@@ -537,7 +556,7 @@ export function TradingRulesEditPage() {
                     onChange={() =>
                       setBuilderState((s) => ({ ...s, universeType: ut }))
                     }
-                    className="accent-emerald-500"
+                    className="accent-trade-primary"
                   />
                   {ut === "symbols" ? "종목 코드 직접 입력" : "거래량 상위 N종목"}
                 </label>
@@ -546,7 +565,7 @@ export function TradingRulesEditPage() {
 
             {builderState.universeType === "symbols" ? (
               <div>
-                <label className="mb-1 block text-xs text-gray-400">
+                <label className="mb-1 block text-xs text-trade-muted">
                   종목 코드 (쉼표 구분)
                 </label>
                 <input
@@ -562,7 +581,7 @@ export function TradingRulesEditPage() {
             ) : (
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">
+                  <label className="mb-1 block text-xs text-trade-muted">
                     상위 N종목 (KOSPI)
                   </label>
                   <input
@@ -577,8 +596,11 @@ export function TradingRulesEditPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-400">
-                    추가 종목 코드 (선택, 쉼표 구분)
+                  <label className="mb-1 block text-xs text-trade-muted">
+                    {/* + 추가종목 action link — text-trade-primary (wireframe line ~414) */}
+                    추가 종목 코드{" "}
+                    <span className="text-trade-primary">+ 추가종목</span>
+                    {" "}(선택, 쉼표 구분)
                   </label>
                   <input
                     type="text"
@@ -597,12 +619,15 @@ export function TradingRulesEditPage() {
             )}
           </section>
 
-          {/* 3. 진입 조건 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
+          {/* ③ 진입 조건 — wireframe lines ~416–426 */}
+          <section className={SECTION_CLS}>
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-300">진입 조건</h2>
+              <h2 className={HEADING_CLS}>
+                ③ 진입 조건 · 논리{" "}
+                <span className="text-trade-primary">{builderState.entryLogic}</span>
+              </h2>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">논리:</span>
+                <span className="text-xs text-trade-muted">논리:</span>
                 <select
                   value={builderState.entryLogic}
                   onChange={(e) =>
@@ -611,7 +636,7 @@ export function TradingRulesEditPage() {
                       entryLogic: e.target.value as RuleLogic,
                     }))
                   }
-                  className="rounded-md border border-white/10 bg-gray-800 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className={SELECT_CLS}
                 >
                   <option value="AND">AND</option>
                   <option value="OR">OR</option>
@@ -632,23 +657,25 @@ export function TradingRulesEditPage() {
               ))}
             </div>
 
+            {/* + 조건 추가 — text-trade-primary (wireframe line ~425) */}
             <button
               type="button"
               onClick={addEntryCondition}
-              className="mt-3 text-sm text-emerald-400 hover:text-emerald-300"
+              className="mt-3 text-sm text-trade-primary hover:text-trade-primary-active"
             >
               + 조건 추가
             </button>
           </section>
 
-          {/* 4. 청산 조건 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-gray-300">청산 조건</h2>
+          {/* ④ 청산 조건 — wireframe lines ~427–433 */}
+          <section className={SECTION_CLS}>
+            <h2 className={HEADING_CLS}>④ 청산 조건</h2>
 
-            {/* 익절 / 손절 */}
+            {/* 익절 / 손절 — values colored per wireframe */}
             <div className="mb-4 flex gap-4">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-400">익절 %</label>
+                <label className="mb-1 block text-xs text-trade-muted">익절 %</label>
+                {/* text-trade-up per wireframe ~430 */}
                 <input
                   type="number"
                   placeholder="예: 5"
@@ -659,11 +686,12 @@ export function TradingRulesEditPage() {
                       takeProfitPct: e.target.value,
                     }))
                   }
-                  className={INPUT_CLS}
+                  className={`${INPUT_MONO_CLS} text-trade-up`}
                 />
               </div>
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-400">손절 %</label>
+                <label className="mb-1 block text-xs text-trade-muted">손절 %</label>
+                {/* text-trade-down per wireframe ~431 */}
                 <input
                   type="number"
                   placeholder="예: 3"
@@ -674,7 +702,7 @@ export function TradingRulesEditPage() {
                       stopLossPct: e.target.value,
                     }))
                   }
-                  className={INPUT_CLS}
+                  className={`${INPUT_MONO_CLS} text-trade-down`}
                 />
               </div>
             </div>
@@ -682,7 +710,7 @@ export function TradingRulesEditPage() {
             {/* Exit indicator conditions */}
             {builderState.exitConditions.length > 0 && (
               <div className="mb-2 flex items-center gap-2">
-                <span className="text-xs text-gray-400">논리:</span>
+                <span className="text-xs text-trade-muted">논리:</span>
                 <select
                   value={builderState.exitLogic}
                   onChange={(e) =>
@@ -691,7 +719,7 @@ export function TradingRulesEditPage() {
                       exitLogic: e.target.value as RuleLogic,
                     }))
                   }
-                  className="rounded-md border border-white/10 bg-gray-800 px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className={SELECT_CLS}
                 >
                   <option value="AND">AND</option>
                   <option value="OR">OR</option>
@@ -712,127 +740,131 @@ export function TradingRulesEditPage() {
               ))}
             </div>
 
+            {/* + 지표 조건 — text-trade-primary (wireframe line ~432) */}
             <button
               type="button"
               onClick={addExitCondition}
-              className="mt-3 text-sm text-emerald-400 hover:text-emerald-300"
+              className="mt-3 text-sm text-trade-primary hover:text-trade-primary-active"
             >
-              + 청산 지표 조건 추가
+              + 지표 조건
             </button>
           </section>
 
-          {/* 5. 사이징 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-gray-300">사이징</h2>
-            <div className="flex gap-3">
-              <select
-                value={builderState.sizingType}
-                onChange={(e) =>
-                  setBuilderState((s) => ({
-                    ...s,
-                    sizingType: e.target.value as SizingType,
-                  }))
-                }
-                className="rounded-md border border-white/10 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              >
-                <option value="cash">현금 (원)</option>
-                <option value="percent">비중 (%)</option>
-                <option value="qty">수량 (주)</option>
-              </select>
-              <input
-                type="number"
-                placeholder="값"
-                value={builderState.sizingValue}
-                onChange={(e) =>
-                  setBuilderState((s) => ({ ...s, sizingValue: e.target.value }))
-                }
-                className={INPUT_CLS}
-              />
-            </div>
-          </section>
-
-          {/* 6. 제약 */}
-          <section className="rounded-lg border border-white/10 bg-gray-900/50 p-5">
-            <h2 className="mb-3 text-sm font-medium text-gray-300">제약</h2>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-400">
-                  쿨다운 (봉)
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={builderState.cooldownBars}
-                  onChange={(e) =>
-                    setBuilderState((s) => ({ ...s, cooldownBars: e.target.value }))
-                  }
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-400">
-                  최대 포지션 (종목당)
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={builderState.maxPositionsPerSymbol}
+          {/* ⑤ 사이징 + ⑥ 제약 — wireframe lines ~435–438 */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* ⑤ 사이징 */}
+            <section className={SECTION_CLS}>
+              <h2 className={HEADING_CLS}>⑤ 사이징</h2>
+              <div className="flex gap-3">
+                <select
+                  value={builderState.sizingType}
                   onChange={(e) =>
                     setBuilderState((s) => ({
                       ...s,
-                      maxPositionsPerSymbol: e.target.value,
+                      sizingType: e.target.value as SizingType,
                     }))
                   }
-                  className={INPUT_CLS}
+                  className={SELECT_CLS}
+                >
+                  <option value="cash">현금 (원)</option>
+                  <option value="percent">비중 (%)</option>
+                  <option value="qty">수량 (주)</option>
+                </select>
+                <input
+                  type="number"
+                  placeholder="값"
+                  value={builderState.sizingValue}
+                  onChange={(e) =>
+                    setBuilderState((s) => ({ ...s, sizingValue: e.target.value }))
+                  }
+                  className={`${INPUT_MONO_CLS} text-trade-body`}
                 />
               </div>
-            </div>
-          </section>
+            </section>
+
+            {/* ⑥ 제약 */}
+            <section className={SECTION_CLS}>
+              <h2 className={HEADING_CLS}>⑥ 제약</h2>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs text-trade-muted">
+                    쿨다운 (봉)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={builderState.cooldownBars}
+                    onChange={(e) =>
+                      setBuilderState((s) => ({ ...s, cooldownBars: e.target.value }))
+                    }
+                    className={`${INPUT_MONO_CLS} text-trade-body`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs text-trade-muted">
+                    최대 포지션
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={builderState.maxPositionsPerSymbol}
+                    onChange={(e) =>
+                      setBuilderState((s) => ({
+                        ...s,
+                        maxPositionsPerSymbol: e.target.value,
+                      }))
+                    }
+                    className={`${INPUT_MONO_CLS} text-trade-body`}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       )}
 
-      {/* ── JSON tab ── */}
+      {/* ── JSON tab — wireframe lines ~449–470 ── */}
       {tab === "json" && (
         <div className="space-y-2">
+          {/* code panel — bg-trade-surface, font-trade-mono, text-trade-muted-strong */}
           <textarea
             rows={20}
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
             spellCheck={false}
-            className="w-full rounded-md border border-white/10 bg-gray-900 px-3 py-2 font-mono text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full rounded-lg border border-trade-hairline bg-trade-surface px-3 py-3 font-trade-mono text-sm text-trade-muted-strong focus:outline-none focus:ring-2 focus:ring-trade-info/50"
           />
+          {/* jsonError — text-trade-down (wireframe line ~469) */}
           {jsonError && (
-            <p className="text-xs text-red-400">{jsonError}</p>
+            <p className="text-xs text-trade-down">{jsonError}</p>
           )}
         </div>
       )}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-white/10 pt-4">
+      {/* Footer — wireframe lines ~439–445 */}
+      <div className="flex items-center justify-between border-t border-trade-hairline pt-4">
+        {/* formError — text-trade-down (wireframe line ~440) */}
         <div>
           {formError && (
-            <p className="text-xs text-red-400">{formError}</p>
+            <p className="text-xs text-trade-down">{formError}</p>
           )}
         </div>
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-md border border-white/10 px-4 py-2 text-sm text-gray-300 hover:bg-white/5"
-          >
+          {/* 취소 → TradeButton secondary */}
+          <TradeButton variant="secondary" onClick={() => navigate(-1)}>
             취소
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
+          </TradeButton>
+          {/* 저장 → TradeButton primary (loading during save) */}
+          <TradeButton
+            variant="primary"
             disabled={saveMutation.isPending}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+            loading={saveMutation.isPending}
+            onClick={handleSave}
           >
-            {saveMutation.isPending ? "저장 중..." : "저장"}
-          </button>
+            저장
+          </TradeButton>
         </div>
       </div>
     </div>
   );
 }
-
