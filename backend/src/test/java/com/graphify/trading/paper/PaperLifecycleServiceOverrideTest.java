@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphify.company.CompanyRepository;
+import com.graphify.market.KrxMarketCalendar;
 import com.graphify.market.MarketDataIngestionService;
 import com.graphify.market.volume.VolumeRankingProvider;
 import com.graphify.trading.rule.PaperLiveSymbolService;
@@ -52,6 +53,9 @@ class PaperLifecycleServiceOverrideTest {
     @Mock
     private PaperRunRepository runRepo;
 
+    @Mock
+    private KrxMarketCalendar marketCalendar;
+
     private PaperLifecycleService service;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,9 +68,12 @@ class PaperLifecycleServiceOverrideTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+            .when(marketCalendar.isOperatingWindowOpen(org.mockito.ArgumentMatchers.any()))
+            .thenReturn(true);
         service = new PaperLifecycleService(
                 ruleRepo, objectMapper, paperLiveSymbolService, companyRepo,
-                liveRanking, ingestionService, runRepo);
+                liveRanking, ingestionService, runRepo, marketCalendar);
     }
 
     private TradingRule activeStoppedRule() {

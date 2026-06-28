@@ -3,6 +3,7 @@ package com.graphify.trading.rule;
 import com.graphify.common.exception.GraphifyException;
 import com.graphify.company.Company;
 import com.graphify.company.CompanyRepository;
+import com.graphify.market.KrxMarketCalendar;
 import com.graphify.market.MarketDataIngestionService;
 import com.graphify.market.volume.VolumeRankingProvider;
 import com.graphify.trading.paper.PaperLifecycleService;
@@ -35,6 +36,7 @@ class PaperLifecycleServiceTest {
     @Mock MarketDataIngestionService ingestionService;
     @Mock com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     @Mock PaperRunRepository runRepo;
+    @Mock KrxMarketCalendar marketCalendar;
 
     PaperLifecycleService service;
 
@@ -46,6 +48,9 @@ class PaperLifecycleServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+            .when(marketCalendar.isOperatingWindowOpen(org.mockito.ArgumentMatchers.any()))
+            .thenReturn(true);
         service = new PaperLifecycleService(
             ruleRepo,
             new com.fasterxml.jackson.databind.ObjectMapper(),
@@ -53,7 +58,8 @@ class PaperLifecycleServiceTest {
             companyRepo,
             liveRanking,
             ingestionService,
-            runRepo
+            runRepo,
+            marketCalendar
         );
     }
 

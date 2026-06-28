@@ -1,6 +1,7 @@
 package com.graphify.trading.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -8,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.graphify.common.exception.GraphifyException;
 import com.graphify.company.CompanyRepository;
+import com.graphify.market.KrxMarketCalendar;
 import com.graphify.market.MarketDataIngestionService;
 import com.graphify.market.volume.VolumeRankingProvider;
 import com.graphify.trading.rule.PaperLiveSymbolService;
@@ -40,6 +43,7 @@ class PaperRunLifecycleServiceTest {
     @Mock private VolumeRankingProvider liveRanking;
     @Mock private MarketDataIngestionService ingestionService;
     @Mock private PaperRunRepository runRepo;
+    @Mock private KrxMarketCalendar marketCalendar;
 
     private PaperLifecycleService service;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -57,9 +61,12 @@ class PaperRunLifecycleServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+            .when(marketCalendar.isOperatingWindowOpen(org.mockito.ArgumentMatchers.any()))
+            .thenReturn(true);
         service = new PaperLifecycleService(
                 ruleRepo, objectMapper, paperLiveSymbolService, companyRepo,
-                liveRanking, ingestionService, runRepo);
+                liveRanking, ingestionService, runRepo, marketCalendar);
     }
 
     private TradingRule activeStoppedRule() {
@@ -140,5 +147,21 @@ class PaperRunLifecycleServiceTest {
         assertThat(existingRun.getStatus()).isEqualTo("STOPPED");
         assertThat(existingRun.getEndedAt()).isNotNull();
         verify(runRepo).save(existingRun);
+    }
+
+    // ── ERR_MARKET_CLOSED: start() blocked when operating window is closed ────
+
+    @Test
+    void start_throwsMarketClosed_whenOperatingWindowClosed() {
+        TradingRule rule = activeStoppedRule();
+        when(ruleRepo.findByIdAndUserId(RULE_ID, USER_ID)).thenReturn(Optional.of(rule));
+        // override the lenient stub: market is CLOSED for this test
+        when(marketCalendar.isOperatingWindowOpen(any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.start(USER_ID, RULE_ID))
+            .isInstanceOf(GraphifyException.class)
+            .hasMessageContaining("폐장")
+            .extracting(e -> ((GraphifyException) e).getCode())
+            .isEqualTo("ERR_MARKET_CLOSED");
     }
 }
