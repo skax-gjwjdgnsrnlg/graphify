@@ -68,13 +68,24 @@ export function AdminMarketDataPage() {
     let offset = 0;
     let totalIngested = 0;
     let totalFailed = 0;
+    // 일시적 hiccup(네트워크/콜드스타트/빈 응답)에 한 배치 실패로 전체가 중단되지 않게 재시도.
+    const fetchBatchWithRetry = async (off: number) => {
+      let lastErr: unknown;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const b = (await ingestKospi200Batch(off, INGEST_BATCH_SIZE)).data;
+          if (b) return b;
+          lastErr = new ApiRequestError("ERR_EMPTY", "적재 응답이 비어 있습니다.");
+        } catch (e) {
+          lastErr = e;
+        }
+        await new Promise((r) => window.setTimeout(r, 1500));
+      }
+      throw lastErr;
+    };
     try {
       for (;;) {
-        const res = await ingestKospi200Batch(offset, INGEST_BATCH_SIZE);
-        const b = res.data;
-        if (!b) {
-          throw new ApiRequestError("ERR_EMPTY", "적재 응답이 비어 있습니다.");
-        }
+        const b = await fetchBatchWithRetry(offset);
         totalIngested += b.ingested;
         totalFailed += b.failed;
         setIngestProgress({ done: b.nextOffset, total: b.total });
