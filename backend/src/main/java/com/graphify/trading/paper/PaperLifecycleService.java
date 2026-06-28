@@ -3,6 +3,7 @@ package com.graphify.trading.paper;
 import com.graphify.common.exception.GraphifyException;
 import com.graphify.company.Company;
 import com.graphify.company.CompanyRepository;
+import com.graphify.market.KrxMarketCalendar;
 import com.graphify.market.MarketDataIngestionService;
 import com.graphify.market.volume.VolumeRankingProvider;
 import com.graphify.trading.rule.PaperLiveSymbolService;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import org.slf4j.Logger;
@@ -52,6 +54,7 @@ public class PaperLifecycleService {
     private final VolumeRankingProvider liveRanking;
     private final MarketDataIngestionService ingestionService;
     private final PaperRunRepository runRepo;
+    private final KrxMarketCalendar marketCalendar;
 
     public PaperLifecycleService(
             TradingRuleRepository ruleRepo,
@@ -60,7 +63,8 @@ public class PaperLifecycleService {
             CompanyRepository companyRepo,
             @Qualifier("naverTradingValueRankingAdapter") VolumeRankingProvider liveRanking,
             MarketDataIngestionService ingestionService,
-            PaperRunRepository runRepo) {
+            PaperRunRepository runRepo,
+            KrxMarketCalendar marketCalendar) {
         this.ruleRepo = ruleRepo;
         this.objectMapper = objectMapper;
         this.paperLiveSymbolService = paperLiveSymbolService;
@@ -68,6 +72,7 @@ public class PaperLifecycleService {
         this.liveRanking = liveRanking;
         this.ingestionService = ingestionService;
         this.runRepo = runRepo;
+        this.marketCalendar = marketCalendar;
     }
 
     // ─── 신규 2축 메서드 ────────────────────────────────────────────────────────
@@ -117,6 +122,10 @@ public class PaperLifecycleService {
         if ("RUNNING".equals(rule.getRunStatus())) {
             throw new GraphifyException("ERR_LIFECYCLE_008",
                 "이미 RUNNING 상태인 룰입니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (!marketCalendar.isOperatingWindowOpen(ZonedDateTime.now(KST))) {
+            throw new GraphifyException("ERR_MARKET_CLOSED",
+                "현재는 폐장입니다. 평일 09:00–18:00에만 전략을 시작할 수 있습니다.", HttpStatus.BAD_REQUEST);
         }
         List<String> override = normalizeOverride(overrideSymbols);
         List<String> symbols = override != null ? override : resolveSymbols(rule);
@@ -168,6 +177,20 @@ public class PaperLifecycleService {
         runRepo.findFirstByRuleIdAndStatus(saved.getId(), "RUNNING")
             .ifPresent(run -> { run.stop(Instant.now()); runRepo.save(run); });
         return toResponse(saved);
+    }
+
+    /** 폐장 자동 중지: RUNNING 중인 모든 PAPER 룰을 STOPPED로 전환하고 열린 run을 종료. 중지된 룰 수 반환. */
+    public int stopAllRunningForMarketClose() {
+        List<TradingRule> running = ruleRepo.findByModeAndRunStatus("PAPER", "RUNNING");
+        Instant nowTs = Instant.now();
+        for (TradingRule rule : running) {
+            rule.setRunStatus("STOPPED");
+            ruleRepo.save(rule);
+            paperLiveSymbolService.deactivateRule(rule.getId());
+            runRepo.findFirstByRuleIdAndStatus(rule.getId(), "RUNNING")
+                .ifPresent(run -> { run.stop(nowTs); runRepo.save(run); });
+        }
+        return running.size();
     }
 
     /**

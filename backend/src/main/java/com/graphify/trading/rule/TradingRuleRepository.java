@@ -9,4 +9,6 @@ public interface TradingRuleRepository extends JpaRepository<TradingRule, Long> 
     List<TradingRule> findByUserIdAndModeOrderByUpdatedAtDesc(Long userId, String mode);
 
     Optional<TradingRule> findByIdAndUserId(Long id, Long userId);
+
+    List<TradingRule> findByModeAndRunStatus(String mode, String runStatus);
 }
