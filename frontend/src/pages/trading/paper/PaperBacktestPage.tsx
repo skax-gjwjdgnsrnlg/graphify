@@ -233,7 +233,7 @@ export function PaperBacktestPage() {
               value={`${result.winRate.toFixed(1)}%`}
             />
             <TradeStatCard
-              label="거래수"
+              label="청산 횟수"
               value={`${result.tradeCount}회`}
             />
           </div>
